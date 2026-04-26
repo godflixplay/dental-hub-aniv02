@@ -6,9 +6,12 @@
 // gerar outro nome.
 
 import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Readable } from "node:stream";
 
 const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let cachedHandler;
 
@@ -16,23 +19,23 @@ async function loadHandler() {
   if (cachedHandler) return cachedHandler;
 
   const candidates = [
-    "./server/server.js",
-    "./server/index.js",
-    "./.output/server/index.mjs",
+    path.join(__dirname, "../dist/server/server.js"),
+    path.join(__dirname, "../dist/server/index.js"),
+    path.join(__dirname, "../.output/server/index.mjs"),
   ];
 
   const errors = [];
-  for (const rel of candidates) {
+  for (const candidate of candidates) {
     try {
-      const mod = await import(rel);
+      const mod = await import(pathToFileURL(candidate).href);
       const fn = mod.default ?? mod.handler ?? mod.fetch;
       if (typeof fn === "function") {
         cachedHandler = fn;
         return fn;
       }
-      errors.push(`${rel}: loaded but no default/handler/fetch export`);
+      errors.push(`${candidate}: loaded but no default/handler/fetch export`);
     } catch (err) {
-      errors.push(`${rel}: ${err?.message ?? String(err)}`);
+      errors.push(`${candidate}: ${err?.message ?? String(err)}`);
     }
   }
   throw new Error(
