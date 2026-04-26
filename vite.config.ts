@@ -18,7 +18,6 @@ export default defineConfig({
     tsConfigPaths(),
     tailwindcss(),
     tanstackStart({
-      target: "node-server",
       customViteReactPlugin: true,
     }),
     viteReact(),

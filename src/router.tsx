@@ -7,8 +7,7 @@ import { routeTree } from "./routeTree.gen";
 // Alguns bundles SSR/cliente em ambientes não-Lovable (Vercel) podem
 // referenciar React fora de escopo de módulo, causando "React is not defined".
 if (typeof globalThis !== "undefined") {
-  // @ts-expect-error - injeção intencional no global
-  globalThis.React = globalThis.React ?? React;
+  (globalThis as unknown as { React?: typeof React }).React ??= React;
 }
 
 // Auto-recuperação de erro de chunk: quando o Vite faz rebuild e o navegador
