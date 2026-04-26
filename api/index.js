@@ -21,7 +21,7 @@ async function loadHandler() {
     "../.output/server/index.mjs",
   ];
 
-  let lastErr;
+  const errors = [];
   for (const rel of candidates) {
     try {
       const mod = await import(rel);
@@ -30,12 +30,13 @@ async function loadHandler() {
         cachedHandler = fn;
         return fn;
       }
+      errors.push(`${rel}: loaded but no default/handler/fetch export`);
     } catch (err) {
-      lastErr = err;
+      errors.push(`${rel}: ${err?.message ?? String(err)}`);
     }
   }
   throw new Error(
-    `[vercel adapter] SSR handler not found. Last error: ${lastErr?.message ?? "unknown"}`
+    `[vercel adapter] SSR handler not found. Tried:\n${errors.join("\n")}`
   );
 }
 
