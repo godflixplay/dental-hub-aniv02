@@ -117,8 +117,9 @@ UPDATE public.profiles
  WHERE email IN (
    'contato@stelleodontologia.com.br',
    'williamandradeoficial520@gmail.com',
+   'williamnogueiraoficial@gmail.com',
    'dentalhubtalk@gmail.com'
  );
 
--- Conferência rápida (deve listar 3 linhas com acesso_cortesia = true):
+-- Conferência rápida (deve listar 4 linhas com acesso_cortesia = true):
 -- SELECT email, role, acesso_cortesia FROM public.profiles WHERE acesso_cortesia = true;
