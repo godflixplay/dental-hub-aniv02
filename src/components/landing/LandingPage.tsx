@@ -103,9 +103,9 @@ function Logo() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 lg:px-8 lg:pt-20">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-8">
-          <div className="relative z-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 py-12 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2 lg:items-center lg:gap-8 lg:py-0">
+          <div className="relative z-10 max-w-xl">
             <Badge
               variant="secondary"
               className="mb-6 rounded-full bg-secondary/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
@@ -116,7 +116,7 @@ function Hero() {
               Automatize o relacionamento com seus pacientes e{" "}
               <span className="text-primary">aumente seu faturamento</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+            <p className="mt-6 text-lg text-muted-foreground">
               Envie mensagens automáticas de aniversário, lembretes e campanhas
               pelo WhatsApp — de forma simples e sem perder tempo com tarefas
               manuais.
@@ -146,13 +146,17 @@ function Hero() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative h-full w-full lg:h-[calc(100vh-4rem)]">
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-24 bg-gradient-to-r from-background to-transparent lg:block"
+              aria-hidden="true"
+            />
             <img
               src={heroDentist}
               alt="Dentista sorrindo enquanto envia mensagem de aniversário pelo WhatsApp para paciente"
               width={1920}
               height={1088}
-              className="h-auto w-full object-contain"
+              className="mx-auto h-full max-h-[640px] w-full object-contain lg:max-h-none"
             />
           </div>
         </div>
