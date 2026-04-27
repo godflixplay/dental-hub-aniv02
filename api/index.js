@@ -28,12 +28,19 @@ async function loadHandler() {
   for (const candidate of candidates) {
     try {
       const mod = await import(pathToFileURL(candidate).href);
-      const fn = mod.default ?? mod.handler ?? mod.fetch;
+      const fn =
+        (typeof mod.default?.fetch === "function" && mod.default.fetch.bind(mod.default)) ??
+        (typeof mod.default === "function" && mod.default) ??
+        (typeof mod.fetch === "function" && mod.fetch) ??
+        (typeof mod.handler === "function" && mod.handler) ??
+        (typeof mod.server?.fetch === "function" && mod.server.fetch.bind(mod.server));
       if (typeof fn === "function") {
         cachedHandler = fn;
         return fn;
       }
-      errors.push(`${candidate}: loaded but no default/handler/fetch export`);
+      errors.push(
+        `${candidate}: loaded but no compatible export. keys=${Object.keys(mod).join(",")}; default keys=${mod.default && typeof mod.default === "object" ? Object.keys(mod.default).join(",") : typeof mod.default}`
+      );
     } catch (err) {
       errors.push(`${candidate}: ${err?.message ?? String(err)}`);
     }
