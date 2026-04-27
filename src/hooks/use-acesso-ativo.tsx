@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { getMinhaAssinatura } from "@/utils/asaas.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export type AcessoAtivoStatus =
   | "loading"
@@ -28,8 +29,24 @@ export interface AcessoAtivoState {
  * acesso até a data `proxima_cobranca` (regra "soft cancel").
  */
 export function useAcessoAtivo(): AcessoAtivoState {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const accessToken = session?.access_token;
+
+  const { data: acessoCortesiaDireto } = useQuery({
+    queryKey: ["acesso-cortesia-direto", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("acesso_cortesia")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return Boolean(
+        (data as { acesso_cortesia?: boolean } | null)?.acesso_cortesia,
+      );
+    },
+    staleTime: 30_000,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["acesso-ativo", accessToken],
@@ -37,6 +54,16 @@ export function useAcessoAtivo(): AcessoAtivoState {
     queryFn: () => getMinhaAssinatura({ data: { accessToken: accessToken! } }),
     staleTime: 30_000,
   });
+
+  if (acessoCortesiaDireto) {
+    return {
+      loading: false,
+      ativo: true,
+      status: "ativa",
+      acessoAte: null,
+      mensagem: "Acesso de cortesia concedido pelo administrador.",
+    };
+  }
 
   if (!accessToken || isLoading) {
     return {
