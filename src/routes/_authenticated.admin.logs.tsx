@@ -281,6 +281,14 @@ function AdminLogs() {
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 </div>
+              ) : error ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                  Erro ao carregar os logs: {(error as Error).message}
+                  <br />
+                  <span className="text-xs opacity-80">
+                    Abra o Console do navegador (F12) para ver detalhes.
+                  </span>
+                </div>
               ) : grupos.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
                   Nenhum log encontrado neste período.
