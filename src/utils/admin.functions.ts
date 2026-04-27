@@ -184,8 +184,19 @@ export const adminLogs = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const supabase = await requireAdmin(data.accessToken);
-    let q = supabase
+    // Valida que é admin (com o token do usuário) e depois usa service role
+    // para a leitura — assim escapamos de qualquer problema de RLS/JWT.
+    await requireAdmin(data.accessToken);
+    const admin = getSupabaseAdmin();
+
+    console.log("[adminLogs] iniciando", {
+      filtroStatus: data.filtroStatus,
+      dataInicio: data.dataInicio,
+      dataFim: data.dataFim,
+      limit: data.limit,
+    });
+
+    let q = admin
       .from("envios_whatsapp")
       .select("id, telefone, status, created_at, user_id, instancia_id, erro, nome")
       .order("created_at", { ascending: false })
@@ -194,6 +205,10 @@ export const adminLogs = createServerFn({ method: "POST" })
     if (data.dataInicio) q = q.gte("created_at", data.dataInicio);
     if (data.dataFim) q = q.lte("created_at", data.dataFim);
     const { data: envios, error } = await q;
+    console.log("[adminLogs] envios resultado", {
+      qtd: envios?.length ?? 0,
+      error: error?.message ?? null,
+    });
     if (error) {
       // Tolera tabela ainda não criada (migration pendente) ou coluna ausente
       const code = (error as { code?: string }).code;
@@ -218,7 +233,7 @@ export const adminLogs = createServerFn({ method: "POST" })
       { email: string; nome_responsavel: string | null }
     > = {};
     if (userIds.length > 0) {
-      const { data: profs } = await supabase
+      const { data: profs } = await admin
         .from("profiles")
         .select("id, email, nome_responsavel")
         .in("id", userIds);
