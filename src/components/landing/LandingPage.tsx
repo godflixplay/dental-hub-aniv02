@@ -113,12 +113,13 @@ function Hero() {
               Hub de soluções para clínicas odontológicas
             </Badge>
             <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Transforme sua clínica em uma máquina automática de{" "}
-              <span className="text-primary">relacionamento.</span>
+              Automatize o relacionamento com seus pacientes e{" "}
+              <span className="text-primary">aumente seu faturamento</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              Ferramentas simples, práticas e prontas para usar que ajudam você
-              a fidelizar pacientes e aumentar o faturamento — sem complicação.
+              Envie mensagens automáticas de aniversário, lembretes e campanhas
+              pelo WhatsApp — de forma simples e sem perder tempo com tarefas
+              manuais.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
