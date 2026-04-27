@@ -115,16 +115,32 @@ function AdminLogs() {
         dataInicio: range.dataInicio,
         dataFim: range.dataFim,
       });
+      // Timeout defensivo: se o server-fn não responder em 20s, falha
+      // visivelmente em vez de deixar o spinner girando para sempre.
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Tempo esgotado (20s). Recarregue a página com Ctrl+Shift+R.",
+              ),
+            ),
+          20_000,
+        ),
+      );
       try {
-        const res = await adminLogs({
-          data: {
-            accessToken,
-            limit: 1000,
-            filtroStatus,
-            dataInicio: range.dataInicio,
-            dataFim: range.dataFim,
-          },
-        });
+        const res = await Promise.race([
+          adminLogs({
+            data: {
+              accessToken,
+              limit: 1000,
+              filtroStatus,
+              dataInicio: range.dataInicio,
+              dataFim: range.dataFim,
+            },
+          }),
+          timeout,
+        ]);
         console.log("[AdminLogs] resposta", {
           envios: res?.envios?.length,
           grupos: res?.grupos?.length,
@@ -135,7 +151,7 @@ function AdminLogs() {
         throw e;
       }
     },
-    retry: 1,
+    retry: 0,
     refetchInterval: 60_000,
   });
 
