@@ -102,10 +102,11 @@ function Logo() {
 /* ---------------- Hero ---------------- */
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 py-12 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-2 lg:items-center lg:gap-8 lg:py-0">
-          <div className="relative z-10 max-w-xl">
+    <section className="relative w-full overflow-hidden lg:min-h-[80vh]">
+      <div className="grid w-full grid-cols-1 items-center gap-10 lg:min-h-[80vh] lg:grid-cols-[45fr_55fr] lg:gap-4">
+        {/* Left content */}
+        <div className="px-4 pt-12 sm:px-6 lg:px-8 lg:py-16 xl:pl-16">
+          <div className="relative z-10 mx-auto max-w-xl lg:ml-auto lg:mr-0">
             <Badge
               variant="secondary"
               className="mb-6 rounded-full bg-secondary/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
@@ -145,20 +146,22 @@ function Hero() {
               <FeatureCheck icon={Sparkles} label="Suporte especializado" />
             </div>
           </div>
+        </div>
 
-          <div className="relative h-full w-full lg:h-[calc(100vh-4rem)]">
-            <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-24 bg-gradient-to-r from-background to-transparent lg:block"
-              aria-hidden="true"
-            />
-            <img
-              src={heroDentist}
-              alt="Dentista sorrindo enquanto envia mensagem de aniversário pelo WhatsApp para paciente"
-              width={1920}
-              height={1088}
-              className="mx-auto h-full max-h-[640px] w-full object-contain lg:max-h-none"
-            />
-          </div>
+        {/* Right image — full bleed to right edge */}
+        <div className="relative h-[60vh] w-full overflow-hidden sm:h-[70vh] lg:h-[80vh]">
+          <img
+            src={heroDentist}
+            alt="Dentista sorrindo enquanto envia mensagem de aniversário pelo WhatsApp para paciente"
+            width={1920}
+            height={1088}
+            className="h-full w-full scale-110 object-cover"
+          />
+          {/* Left-to-right gradient overlay for text readability on overlap */}
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/3 bg-gradient-to-r from-background via-background/60 to-transparent lg:block"
+            aria-hidden="true"
+          />
         </div>
       </div>
     </section>
