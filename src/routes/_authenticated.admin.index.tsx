@@ -228,7 +228,7 @@ function EvolutionMonitorCard({ accessToken }: { accessToken: string }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-evolution-instances"],
     enabled: !!accessToken,
-    queryFn: () => adminEvolutionInstances({ data: { accessToken } }),
+    queryFn: () => loadEvolutionInstances(accessToken),
     refetchInterval: 120_000,
   });
 
@@ -414,6 +414,39 @@ function EvolutionMonitorCard({ accessToken }: { accessToken: string }) {
       </CardContent>
     </Card>
   );
+}
+
+async function loadEvolutionInstances(accessToken: string) {
+  try {
+    return await withTimeout(adminEvolutionInstances({ data: { accessToken } }));
+  } catch {
+    const { data } = await supabase
+      .from("whatsapp_instances")
+      .select("id, user_id, instance_name, status, updated_at, created_at, owner_number")
+      .order("created_at", { ascending: false });
+    const instancias = data ?? [];
+    const ids = Array.from(new Set(instancias.map((i) => i.user_id).filter(Boolean)));
+    const profMap: Record<string, { email: string; nome_responsavel: string | null }> = {};
+    if (ids.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, email, nome_responsavel")
+        .in("id", ids);
+      for (const p of profs ?? []) {
+        profMap[p.id] = { email: p.email, nome_responsavel: p.nome_responsavel ?? null };
+      }
+    }
+    return {
+      instancias: instancias.map((i) => ({
+        ...i,
+        updated_at: i.updated_at ?? i.created_at ?? null,
+        project_tag: null,
+        email: profMap[i.user_id]?.email ?? "—",
+        nome_responsavel: profMap[i.user_id]?.nome_responsavel ?? null,
+      })),
+      migrationPending: false as const,
+    };
+  }
 }
 
 function formatPhoneBR(raw: string): string {
