@@ -32,6 +32,10 @@ import {
 import heroFullBleed from "@/assets/hero-fullbleed.jpg";
 import pacienteSorrindo from "@/assets/paciente-sorrindo.png";
 import dentistaCelular from "@/assets/dentista-celular.png";
+import celularWhatsapp from "@/assets/celular-whatsapp.png";
+import avatarMaria from "@/assets/avatar-maria.png";
+import avatarJulia from "@/assets/avatar-julia.png";
+import avatarCarlos from "@/assets/avatar-carlos.png";
 
 export function LandingPage() {
   return (
