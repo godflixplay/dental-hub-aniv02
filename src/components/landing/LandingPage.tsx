@@ -260,29 +260,29 @@ function Features() {
           </p>
         </div>
 
-        <div className="mt-10 grid items-center gap-10 lg:grid-cols-[minmax(0,420px)_1fr]">
+        <div className="mt-10 grid items-center gap-12 lg:grid-cols-[minmax(0,520px)_1fr] lg:gap-16">
           {/* Celular incorporado */}
-          <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
+          <div className="relative mx-auto w-full max-w-[420px] lg:max-w-none">
             <div
-              className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-primary/20 via-primary/5 to-transparent blur-3xl"
+              className="absolute inset-0 -z-10 rounded-[3rem] bg-gradient-to-br from-primary/25 via-primary/10 to-transparent blur-3xl"
               aria-hidden="true"
             />
             <img
               src={celularWhatsapp}
-              alt="Celular exibindo mensagem de aniversário no WhatsApp"
+              alt="Celular exibindo conversa de aniversário no WhatsApp entre clínica e paciente"
               loading="lazy"
-              width={1024}
-              height={1024}
-              className="relative mx-auto w-full max-w-[360px] drop-shadow-2xl lg:max-w-[420px]"
+              width={848}
+              height={1264}
+              className="relative mx-auto block w-full max-w-[420px] drop-shadow-2xl lg:max-w-[520px]"
             />
             {/* Floating badges */}
-            <div className="absolute -left-2 top-10 hidden items-center gap-2 rounded-full bg-background px-3 py-2 shadow-lg ring-1 ring-border sm:flex">
+            <div className="absolute -left-3 top-16 hidden items-center gap-2 rounded-full bg-background px-3.5 py-2 shadow-xl ring-1 ring-border sm:flex">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <Send className="h-3.5 w-3.5" />
               </div>
               <span className="text-xs font-semibold">Mensagem enviada</span>
             </div>
-            <div className="absolute -right-2 bottom-16 hidden items-center gap-2 rounded-full bg-background px-3 py-2 shadow-lg ring-1 ring-border sm:flex">
+            <div className="absolute -right-3 bottom-24 hidden items-center gap-2 rounded-full bg-background px-3.5 py-2 shadow-xl ring-1 ring-border sm:flex">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Heart className="h-3.5 w-3.5 fill-current" />
               </div>
