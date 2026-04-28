@@ -413,22 +413,19 @@ function Testimonials() {
   const messages = [
     {
       name: "Maria",
-      initial: "M",
-      bg: "bg-pink-100 text-pink-700",
+      avatar: avatarMaria,
       text: "Muito obrigada! 😊\nQue carinho!\nVocês são demais!",
       time: "10:32",
     },
     {
       name: "Júlia",
-      initial: "J",
-      bg: "bg-orange-100 text-orange-700",
+      avatar: avatarJulia,
       text: "Vocês lembraram de mim! 🥰 🙏\nAmei a mensagem!",
       time: "10:35",
     },
     {
       name: "Carlos",
-      initial: "C",
-      bg: "bg-blue-100 text-blue-700",
+      avatar: avatarCarlos,
       text: "Vou agendar minha avaliação essa semana.\nObrigado! 😊",
       time: "10:37",
     },
