@@ -1,18 +1,21 @@
 import {
   Sparkles,
-  Calendar,
-  UserPlus,
-  Star,
   Check,
-  ShoppingCart,
-  Settings,
-  Send,
-  RotateCw,
   ShieldCheck,
   Clock,
+  Calendar,
+  User,
+  Image as ImageIcon,
+  Zap,
+  CheckCircle2,
+  Heart,
   TrendingUp,
-  PartyPopper,
   Users,
+  DollarSign,
+  Upload,
+  ToggleRight,
+  Send,
+  Bell,
   ChevronRight,
   HelpCircle,
 } from "lucide-react";
@@ -27,6 +30,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import heroDentist from "@/assets/hero-dentista-whatsapp.png";
+import pacienteSorrindo from "@/assets/paciente-sorrindo.png";
+import dentistaCelular from "@/assets/dentista-celular.png";
 
 export function LandingPage() {
   return (
@@ -34,11 +39,10 @@ export function LandingPage() {
       <Header />
       <main>
         <Hero />
-        <SocialProof />
-        <Services />
-        <HowItWorks />
-        <Pricing />
+        <Features />
         <Benefits />
+        <Testimonials />
+        <HowItWorks />
         <FAQ />
         <FinalCta />
       </main>
@@ -47,29 +51,38 @@ export function LandingPage() {
   );
 }
 
+/* ---------------- Helpers ---------------- */
+function smoothScrollTo(id: string) {
+  if (typeof document === "undefined") return;
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 /* ---------------- Header ---------------- */
 function Header() {
   const navItems = [
-    "Início",
-    "Serviços",
-    "Como funciona",
-    "Planos",
-    "Benefícios",
-    "FAQ",
+    { label: "Serviço de Aniversário", id: "hero" },
+    { label: "Como funciona", id: "como-funciona" },
+    { label: "Benefícios", id: "beneficios" },
+    { label: "Depoimentos", id: "depoimentos" },
+    { label: "FAQ", id: "faq" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
         <nav className="hidden items-center gap-7 lg:flex">
-          {navItems.map((item) => (
+          {navItems.map((item, i) => (
             <button
-              key={item}
+              key={item.id}
               type="button"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              onClick={() => smoothScrollTo(item.id)}
+              className={`text-sm font-medium transition-colors hover:text-foreground ${
+                i === 0 ? "text-primary" : "text-muted-foreground"
+              }`}
             >
-              {item}
+              {item.label}
             </button>
           ))}
         </nav>
@@ -102,65 +115,63 @@ function Logo() {
 /* ---------------- Hero ---------------- */
 function Hero() {
   return (
-    <section className="relative w-full overflow-hidden lg:min-h-[80vh]">
-      <div className="grid w-full grid-cols-1 items-center gap-10 lg:min-h-[80vh] lg:grid-cols-[45fr_55fr] lg:gap-4">
+    <section id="hero" className="relative w-full overflow-hidden">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-8 lg:px-8 lg:py-20">
         {/* Left content */}
-        <div className="px-4 pt-12 sm:px-6 lg:px-8 lg:py-16 xl:pl-16">
-          <div className="relative z-10 mx-auto max-w-xl lg:ml-auto lg:mr-0">
-            <Badge
-              variant="secondary"
-              className="mb-6 rounded-full bg-secondary/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
+        <div className="relative z-10 max-w-xl">
+          <Badge
+            variant="secondary"
+            className="mb-6 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
+          >
+            Serviço de envio de aniversário
+          </Badge>
+          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+            Envie mensagens de aniversário{" "}
+            <span className="text-primary">automaticamente</span> e fortaleça o
+            vínculo com seus pacientes
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground">
+            Surpreenda seus pacientes, aumente o retorno para sua clínica e gere
+            mais faturamento — sem esforço manual.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              className="group h-12 rounded-full px-7 text-base"
+              asChild
             >
-              Hub de soluções para clínicas odontológicas
-            </Badge>
-            <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Automatize o relacionamento com seus pacientes e{" "}
-              <span className="text-primary">aumente seu faturamento</span>
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground">
-              Envie mensagens automáticas de aniversário, lembretes e campanhas
-              pelo WhatsApp — de forma simples e sem perder tempo com tarefas
-              manuais.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button size="lg" className="group h-12 rounded-full px-7 text-base" asChild>
-                <Link to="/signup">
-                  Começar agora
-                  <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="group h-12 rounded-full px-7 text-base"
-              >
-                Ver serviços disponíveis
+              <Link to="/signup">
+                Começar agora
                 <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Button>
-            </div>
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="group h-12 rounded-full px-7 text-base"
+              onClick={() => smoothScrollTo("como-funciona")}
+            >
+              Ver como funciona
+              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+          </div>
 
-            <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted-foreground">
-              <FeatureCheck icon={ShieldCheck} label="Sem instalação" />
-              <FeatureCheck icon={Clock} label="Ativação em minutos" />
-              <FeatureCheck icon={Sparkles} label="Suporte especializado" />
-            </div>
+          <div className="mt-10 flex flex-wrap gap-x-10 gap-y-5">
+            <HeroFeature icon={Send} label="Enviado via WhatsApp" />
+            <HeroFeature icon={Clock} label="100% Automático" />
+            <HeroFeature icon={ShieldCheck} label="Seguro e confiável" />
           </div>
         </div>
 
-        {/* Right image — full bleed to right edge */}
-        <div className="relative h-[60vh] w-full overflow-hidden sm:h-[70vh] lg:h-[80vh]">
+        {/* Right image */}
+        <div className="relative w-full">
           <img
             src={heroDentist}
-            alt="Dentista sorrindo enquanto envia mensagem de aniversário pelo WhatsApp para paciente"
-            width={1920}
-            height={1088}
-            className="h-full w-full scale-110 object-cover"
-          />
-          {/* Left-to-right gradient overlay for text readability on overlap */}
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/3 bg-gradient-to-r from-background via-background/60 to-transparent lg:block"
-            aria-hidden="true"
+            alt="Dentista sorrindo enquanto mensagem de aniversário é enviada pelo WhatsApp para paciente"
+            width={1264}
+            height={848}
+            className="h-auto w-full object-contain"
           />
         </div>
       </div>
@@ -168,7 +179,7 @@ function Hero() {
   );
 }
 
-function FeatureCheck({
+function HeroFeature({
   icon: Icon,
   label,
 }: {
@@ -176,354 +187,75 @@ function FeatureCheck({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-        <Icon className="h-3 w-3 text-primary" />
+    <div className="flex flex-col items-center gap-2 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+        <Icon className="h-5 w-5 text-primary" />
       </div>
-      <span className="font-medium">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
     </div>
   );
 }
 
-function MiniSparkline() {
-  return (
-    <svg
-      viewBox="0 0 100 30"
-      className="mt-1 h-8 w-full text-primary"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M0 22 L15 18 L30 20 L45 12 L60 14 L75 8 L90 6 L100 4" />
-    </svg>
-  );
-}
-
-/* ---------------- Social proof ---------------- */
-function SocialProof() {
-  const clinics = [
-    "SorrisoPerfeito",
-    "OralTop",
-    "Vitalle",
-    "NovaOdonto",
-    "PrimeSmile",
-  ];
-  return (
-    <section className="border-y border-border bg-background py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-sm font-medium text-muted-foreground">
-          Clínicas que já confiam no DentalHub
-        </p>
-        <div className="mt-8 grid grid-cols-2 items-center gap-6 sm:grid-cols-3 md:grid-cols-5">
-          {clinics.map((c) => (
-            <div
-              key={c}
-              className="flex items-center justify-center gap-2 text-muted-foreground/70"
-            >
-              <Sparkles className="h-5 w-5" />
-              <span className="text-base font-semibold tracking-tight">{c}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------- Services ---------------- */
-function Services() {
-  const services = [
-    {
-      icon: PartyPopper,
-      title: "Mensagens de Aniversário",
-      description:
-        "Envie mensagens automáticas e personalizadas para seus pacientes no dia do aniversário.",
-      bullets: [
-        "Relacionamento mais próximo",
-        "Mais retorno de pacientes",
-        "Totalmente automático",
-      ],
-      active: true,
-    },
+/* ---------------- Features ---------------- */
+function Features() {
+  const features = [
     {
       icon: Calendar,
-      title: "Lembrete de Consultas",
+      title: "Envio automático",
       description:
-        "Reduza faltas enviando lembretes automáticos de consultas via WhatsApp.",
-      active: false,
+        "Mensagens enviadas automaticamente no dia do aniversário do paciente.",
     },
     {
-      icon: UserPlus,
-      title: "Reativação de Pacientes",
+      icon: User,
+      title: "Personalização",
       description:
-        "Recupere pacientes que não retornam há algum tempo com campanhas automáticas.",
-      active: false,
+        "Use o nome do paciente e da clínica para tornar a mensagem única.",
     },
     {
-      icon: Star,
-      title: "Pedido de Avaliação Google",
+      icon: ImageIcon,
+      title: "Imagens prontas",
       description:
-        "Peça avaliações automaticamente e melhore sua reputação online.",
-      active: false,
+        "Modelos de artes profissionais ou crie as suas personalizadas.",
+    },
+    {
+      icon: Zap,
+      title: "Configuração rápida",
+      description:
+        "Em poucos minutos você ativa o envio automático e pronto!",
+    },
+    {
+      icon: CheckCircle2,
+      title: "Funciona no automático",
+      description:
+        "Nosso sistema trabalha por você 24h por dia, sem esforço manual.",
     },
   ];
 
   return (
-    <section className="bg-secondary/40 py-20">
+    <section className="bg-background py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Serviços disponíveis
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Soluções que simplificam o dia a dia da sua clínica
-          </h2>
-        </div>
-
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((s) => (
-            <ServiceCard key={s.title} {...s} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ServiceCard({
-  icon: Icon,
-  title,
-  description,
-  bullets,
-  active,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  bullets?: string[];
-  active: boolean;
-}) {
-  return (
-    <Card
-      className={`relative gap-0 border-border/60 p-6 transition-all hover:-translate-y-1 hover:shadow-xl ${
-        active ? "ring-2 ring-primary/30" : ""
-      }`}
-    >
-      <div
-        className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-          active
-            ? "bg-primary/10 text-primary"
-            : "bg-secondary text-muted-foreground"
-        }`}
-      >
-        <Icon className="h-6 w-6" />
-      </div>
-      <h3 className="mt-5 text-lg font-bold leading-tight">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-
-      {bullets && (
-        <ul className="mt-4 space-y-2">
-          {bullets.map((b) => (
-            <li key={b} className="flex items-center gap-2 text-sm">
-              <Check className="h-4 w-4 text-accent" />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-6">
-        {active ? (
-          <Button className="w-full rounded-full" asChild>
-            <Link to="/signup">Ativar serviço</Link>
-          </Button>
-        ) : (
-          <Badge
-            variant="secondary"
-            className="rounded-full px-3 py-1 text-xs font-medium text-primary"
-          >
-            Em breve
-          </Badge>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-/* ---------------- How it works ---------------- */
-function HowItWorks() {
-  const steps = [
-    {
-      icon: ShoppingCart,
-      title: "Escolha o serviço",
-      description: "Selecione a solução ideal para sua clínica.",
-    },
-    {
-      icon: Settings,
-      title: "Configure em minutos",
-      description: "A configuração é simples, intuitiva e guiada.",
-    },
-    {
-      icon: Send,
-      title: "Deixe o sistema trabalhar por você",
-      description:
-        "Automatize processos e tenha mais tempo para o que importa.",
-    },
-  ];
-
-  return (
-    <section className="py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Como funciona
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Ativar é rápido e simples
-          </h2>
-        </div>
-
-        <div className="relative mt-14 grid gap-10 md:grid-cols-3">
-          <div
-            className="pointer-events-none absolute left-0 right-0 top-7 hidden md:block"
-            aria-hidden="true"
-          >
-            <svg
-              className="mx-auto h-2 w-2/3 text-border"
-              preserveAspectRatio="none"
-              viewBox="0 0 100 2"
-            >
-              <line
-                x1="0"
-                y1="1"
-                x2="100"
-                y2="1"
-                stroke="currentColor"
-                strokeWidth="0.5"
-                strokeDasharray="2 2"
-              />
-            </svg>
-          </div>
-
-          {steps.map((s, i) => (
-            <div
-              key={s.title}
-              className="relative flex flex-col items-center text-center"
-            >
-              <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                <span className="text-lg font-bold">{i + 1}</span>
-              </div>
-              <div className="mt-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-primary">
-                <s.icon className="h-7 w-7" />
-              </div>
-              <h3 className="mt-4 text-lg font-bold">{s.title}</h3>
-              <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                {s.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------- Pricing ---------------- */
-function Pricing() {
-  const plans = [
-    {
-      slug: "mensal",
-      name: "Mensal",
-      price: "R$ 47",
-      cycle: "/mês",
-      description: "Flexibilidade total, cancele quando quiser.",
-      bullets: [
-        "Mensagens de aniversário ilimitadas",
-        "WhatsApp dedicado",
-        "Suporte por e-mail",
-        "Atualizações constantes",
-      ],
-      featured: false,
-      cta: "Assinar mensal",
-    },
-    {
-      slug: "anual",
-      name: "Anual",
-      price: "R$ 397",
-      cycle: "/ano",
-      description: "Economize ~30% pagando uma vez por ano.",
-      bullets: [
-        "Tudo do plano mensal",
-        "Economia de R$ 167/ano",
-        "Suporte prioritário",
-        "Acesso antecipado a novos serviços",
-      ],
-      featured: true,
-      cta: "Assinar anual",
-      badge: "Mais popular",
-    },
-  ];
-
-  return (
-    <section className="bg-background py-20" id="planos">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Planos
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Preço justo, sem surpresas
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Automação que trabalha por você
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Comece quando quiser. Sem fidelidade no plano mensal.
+            Tudo que você precisa para se conectar com seus pacientes
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {plans.map((p) => (
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          {features.map((f) => (
             <Card
-              key={p.slug}
-              className={`relative gap-0 p-8 transition-all ${
-                p.featured
-                  ? "border-primary/40 shadow-xl ring-2 ring-primary/30"
-                  : "border-border/60"
-              }`}
+              key={f.title}
+              className="gap-0 border-border/60 p-6 text-center transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-              {p.badge && (
-                <Badge className="absolute -top-3 right-6 rounded-full px-3 py-1">
-                  {p.badge}
-                </Badge>
-              )}
-              <h3 className="text-xl font-bold">{p.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {p.description}
-              </p>
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight">
-                  {p.price}
-                </span>
-                <span className="text-muted-foreground">{p.cycle}</span>
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <f.icon className="h-6 w-6" />
               </div>
-              <ul className="mt-6 space-y-3">
-                {p.bullets.map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                className="mt-8 w-full rounded-full"
-                variant={p.featured ? "default" : "outline"}
-                asChild
-              >
-                <Link to="/signup">{p.cta}</Link>
-              </Button>
+              <h3 className="mt-5 text-base font-bold">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {f.description}
+              </p>
             </Card>
           ))}
         </div>
@@ -532,28 +264,244 @@ function Pricing() {
   );
 }
 
-/* ---------------- Benefits ---------------- */
+/* ---------------- Benefits (2 cards) ---------------- */
 function Benefits() {
-  const benefits = [
-    { icon: RotateCw, label: "Mais pacientes voltando" },
-    { icon: ShieldCheck, label: "Mais profissionalismo" },
-    { icon: Clock, label: "Menos trabalho manual" },
-    { icon: TrendingUp, label: "Mais faturamento" },
+  return (
+    <section id="beneficios" className="py-20">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+        {/* Card verde */}
+        <Card className="relative gap-0 overflow-hidden border-emerald-200/60 bg-emerald-50/60 p-8 dark:bg-emerald-950/20">
+          <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_140px]">
+            <div>
+              <h3 className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+                Seu paciente se sente lembrado
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pequenos gestos geram grandes conexões
+              </p>
+
+              <ul className="mt-5 space-y-3">
+                {[
+                  "Aumenta a percepção de cuidado e atenção",
+                  "Fortalece o vínculo com a clínica",
+                  "Gera lembrança espontânea da sua marca",
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="relative">
+              <img
+                src={pacienteSorrindo}
+                alt="Paciente sorrindo ao receber mensagem"
+                loading="lazy"
+                width={1024}
+                height={1024}
+                className="h-32 w-32 rounded-full object-cover sm:h-36 sm:w-36"
+              />
+              <div className="absolute -top-2 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg">
+                <Heart className="h-4 w-4 fill-current" />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-emerald-100/70 p-4 text-sm text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+            <Users className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              <span className="font-semibold">Impacto direto:</span> pacientes
+              mais fiéis e com maior probabilidade de retorno.
+            </p>
+          </div>
+        </Card>
+
+        {/* Card azul */}
+        <Card className="relative gap-0 overflow-hidden border-primary/30 bg-primary/5 p-8">
+          <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_140px]">
+            <div>
+              <h3 className="text-xl font-bold text-primary">
+                Mais retorno, mais faturamento
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Relacionamento que gera resultados
+              </p>
+
+              <ul className="mt-5 space-y-3">
+                {[
+                  "Aumenta o retorno de pacientes que estavam inativos",
+                  "Gera novas consultas sem investimento em anúncios",
+                  "Reduz a ociosidade da agenda e aumenta o faturamento",
+                ].map((b) => (
+                  <li key={b} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-primary/10 sm:h-36 sm:w-36">
+              <TrendingUp className="h-16 w-16 text-primary" strokeWidth={2.5} />
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-primary/10 p-4 text-sm text-primary">
+            <DollarSign className="mt-0.5 h-5 w-5 shrink-0" />
+            <p>
+              Mais relacionamento → Mais retorno → Mais faturamento para sua
+              clínica.
+            </p>
+          </div>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Testimonials ---------------- */
+function Testimonials() {
+  const messages = [
+    {
+      name: "Maria",
+      initial: "M",
+      bg: "bg-pink-100 text-pink-700",
+      text: "Muito obrigada! 😊\nQue carinho!\nVocês são demais!",
+      time: "10:32",
+    },
+    {
+      name: "Júlia",
+      initial: "J",
+      bg: "bg-orange-100 text-orange-700",
+      text: "Vocês lembraram de mim! 🥰 🙏\nAmei a mensagem!",
+      time: "10:35",
+    },
+    {
+      name: "Carlos",
+      initial: "C",
+      bg: "bg-blue-100 text-blue-700",
+      text: "Vou agendar minha avaliação essa semana.\nObrigado! 😊",
+      time: "10:37",
+    },
   ];
 
   return (
-    <section className="bg-secondary/40 py-16">
+    <section id="depoimentos" className="bg-secondary/40 py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs font-semibold uppercase tracking-wider text-primary">
-          Benefícios para sua clínica
-        </p>
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((b) => (
-            <div key={b.label} className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-background text-primary shadow-sm">
-                <b.icon className="h-6 w-6" />
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            O que acontece na prática
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Nossos clientes veem resultados todos os dias
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {messages.map((m) => (
+            <div key={m.name} className="flex items-start gap-3">
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold ${m.bg}`}
+                aria-hidden="true"
+              >
+                {m.initial}
               </div>
-              <p className="text-base font-semibold leading-tight">{b.label}</p>
+              <div className="relative w-full rounded-2xl rounded-tl-sm bg-background p-4 shadow-sm">
+                <p className="whitespace-pre-line text-sm leading-relaxed">
+                  {m.text}
+                </p>
+                <div className="mt-2 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                  <span>{m.time}</span>
+                  <Check className="h-3 w-3 text-primary" />
+                  <Check className="-ml-2 h-3 w-3 text-primary" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          Mensagens reais recebidas por clínicas que usam o DentalHub.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- How it works ---------------- */
+function HowItWorks() {
+  const steps = [
+    {
+      icon: Upload,
+      title: "Importe sua base",
+      description:
+        "Envie sua lista de pacientes com nome, telefone e data de nascimento.",
+      color: "text-emerald-600 bg-emerald-100",
+    },
+    {
+      icon: ToggleRight,
+      title: "Ative a automação",
+      description:
+        "Escolha o modelo de mensagem, personalize como quiser e ative os envios automáticos.",
+      color: "text-primary bg-primary/10",
+    },
+    {
+      icon: Send,
+      title: "Pronto! Sistema envia",
+      description:
+        "No dia do aniversário, o sistema envia a mensagem automaticamente via WhatsApp.",
+      color: "text-purple-600 bg-purple-100",
+    },
+  ];
+
+  return (
+    <section id="como-funciona" className="bg-background py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Simples em 3 passos
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Ative em minutos e deixe o sistema trabalhar por você
+          </p>
+        </div>
+
+        <div className="relative mt-14 grid gap-6 md:grid-cols-3">
+          {steps.map((s, i) => (
+            <div
+              key={s.title}
+              className="relative flex flex-col rounded-2xl border border-border/60 bg-secondary/30 p-6"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {i + 1}
+                </div>
+                <h3 className="text-base font-bold">{s.title}</h3>
+              </div>
+
+              <div className="mt-5 flex items-center gap-4">
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${s.color}`}
+                >
+                  <s.icon className="h-6 w-6" />
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {s.description}
+                </p>
+              </div>
+
+              {i < steps.length - 1 && (
+                <div
+                  className="pointer-events-none absolute -right-4 top-1/2 hidden -translate-y-1/2 md:block"
+                  aria-hidden="true"
+                >
+                  <div className="flex gap-1">
+                    <span className="h-1 w-1 rounded-full bg-border" />
+                    <span className="h-1 w-1 rounded-full bg-border" />
+                    <span className="h-1 w-1 rounded-full bg-border" />
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -575,27 +523,19 @@ function FAQ() {
     },
     {
       q: "Como subo a lista dos meus pacientes?",
-      a: "Você pode importar uma planilha (Excel ou CSV) com nome, telefone (com DDD) e data de nascimento. Também é possível cadastrar pacientes manualmente, um a um, ou ir adicionando aos poucos.",
+      a: "Você pode importar uma planilha (Excel ou CSV) com nome, telefone (com DDD) e data de nascimento. Também é possível cadastrar pacientes manualmente.",
     },
     {
       q: "Posso usar meu WhatsApp pessoal ou precisa ser um número novo?",
-      a: "Pode ser qualquer número, inclusive o pessoal. A conexão é feita por QR Code, igual ao WhatsApp Web. As mensagens saem do seu próprio número, então o paciente recebe como se fosse uma mensagem direta da clínica.",
+      a: "Pode ser qualquer número, inclusive o pessoal. A conexão é feita por QR Code, igual ao WhatsApp Web. As mensagens saem do seu próprio número.",
     },
     {
       q: "Posso personalizar o texto e enviar uma imagem junto?",
-      a: "Sim. Você escreve a mensagem do seu jeito (com o primeiro nome do paciente, por exemplo) e pode anexar uma imagem ou cartão de aniversário que será enviado junto com o texto.",
+      a: "Sim. Você escreve a mensagem do seu jeito (com o primeiro nome do paciente, por exemplo) e pode anexar uma imagem ou cartão de aniversário.",
     },
     {
       q: "Em que horário as mensagens são enviadas?",
-      a: "Você define o horário do envio (por exemplo, 9h da manhã). Todos os dias, naquele horário, o sistema envia para quem faz aniversário no dia. Não precisa deixar o computador ligado — tudo roda na nuvem.",
-    },
-    {
-      q: "Quais são os valores dos planos?",
-      a: "Mensal R$ 37,00 (30 dias), Trimestral R$ 99,90 (90 dias), Semestral R$ 188,70 (180 dias) e Anual R$ 355,20 (365 dias). O pagamento é via PIX, com liberação imediata. Quanto mais longo o plano, maior o desconto.",
-    },
-    {
-      q: "Como faço para cancelar se não gostar?",
-      a: "O cancelamento pode ser feito a qualquer momento direto na sua área de assinante. O serviço continua ativo até o fim do tempo já pago. Se cancelar nos primeiros 7 dias, devolvemos o valor integral.",
+      a: "Você define o horário do envio. Todos os dias, naquele horário, o sistema envia para quem faz aniversário no dia. Tudo roda na nuvem.",
     },
   ];
 
@@ -603,15 +543,11 @@ function FAQ() {
     <section id="faq" className="bg-secondary/40 py-20">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Perguntas frequentes
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Tire suas dúvidas sobre o Dental Hub
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Tudo o que você precisa saber sobre o envio automático de mensagens
-            de aniversário pelo WhatsApp.
+            Tudo o que você precisa saber sobre o envio automático de mensagens.
           </p>
         </div>
 
@@ -636,24 +572,6 @@ function FAQ() {
             ))}
           </Accordion>
         </Card>
-
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          Ainda tem dúvidas?{" "}
-          <a
-            href="/faq"
-            className="font-semibold text-primary hover:underline"
-          >
-            Veja todas as perguntas frequentes
-          </a>
-          {" "}ou fale com a gente em{" "}
-          <a
-            href="mailto:contato@dentalhub.com.br"
-            className="font-semibold text-primary hover:underline"
-          >
-            contato@dentalhub.com.br
-          </a>
-          .
-        </p>
       </div>
     </section>
   );
@@ -663,32 +581,61 @@ function FAQ() {
 function FinalCta() {
   return (
     <section className="px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-primary px-8 py-12 text-primary-foreground shadow-xl sm:px-12 sm:py-14">
-        <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
-          <div className="max-w-xl">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-primary text-primary-foreground shadow-xl">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1.2fr_1fr_0.8fr]">
+          {/* Left: title + buttons */}
+          <div className="p-8 sm:p-10 lg:p-12">
             <h2 className="text-2xl font-bold leading-tight sm:text-3xl">
-              Comece agora com mensagens automáticas de aniversário
+              Comece hoje e transforme mensagens em resultados
             </h2>
             <p className="mt-3 text-sm text-primary-foreground/80 sm:text-base">
-              Fortaleça o relacionamento com seus pacientes e veja a diferença
-              nos resultados da sua clínica.
+              Automatize, surpreenda e veja sua clínica crescer.
             </p>
           </div>
-          <div className="flex flex-col items-start gap-3 lg:items-end">
+
+          {/* Middle: buttons */}
+          <div className="flex flex-col gap-3 px-8 pb-6 sm:px-10 lg:items-center lg:px-0 lg:pb-0">
             <Button
               size="lg"
               variant="secondary"
-              className="group h-12 rounded-full px-7 text-base font-semibold text-primary"
+              className="group h-12 w-full rounded-full px-7 text-base font-semibold text-primary lg:w-auto"
               asChild
             >
               <Link to="/signup">
-                Testar agora gratuitamente
+                Começar agora
                 <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>
-            <p className="text-xs text-primary-foreground/70">
-              Teste grátis por 7 dias. Cancelamento fácil.
-            </p>
+            <Button
+              size="lg"
+              variant="outline"
+              className="group h-12 w-full rounded-full border-primary-foreground/30 bg-transparent px-7 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:w-auto"
+              asChild
+            >
+              <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+                <Bell className="mr-1 h-4 w-4" />
+                Falar com especialista
+              </a>
+            </Button>
+          </div>
+
+          {/* Right: image + small note */}
+          <div className="relative hidden h-full lg:block">
+            <img
+              src={dentistaCelular}
+              alt="Dentista usando o sistema"
+              loading="lazy"
+              width={1024}
+              height={1024}
+              className="h-full max-h-72 w-full object-cover"
+            />
+            <div className="absolute right-6 top-6 flex max-w-[180px] items-start gap-2 rounded-xl bg-primary-foreground/95 p-3 text-xs text-primary shadow-lg">
+              <Heart className="mt-0.5 h-4 w-4 shrink-0 fill-current" />
+              <p className="leading-snug">
+                Comece pequeno, mas gere grandes resultados desde o primeiro
+                dia!
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -701,21 +648,33 @@ function Footer() {
   return (
     <footer className="border-t border-border bg-background py-10">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center justify-between gap-4 w-full sm:flex-row">
+        <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
           <Logo />
           <p className="text-center sm:text-right">
             © {new Date().getFullYear()} DentalHub. Todos os direitos reservados.
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
-          <a href="/faq" className="hover:text-primary">Perguntas frequentes</a>
-          <a href="/privacidade" className="hover:text-primary">Privacidade</a>
-          <a href="/cookies" className="hover:text-primary">Cookies</a>
-          <a href="/termos" className="hover:text-primary">Termos de uso</a>
-          <a href="mailto:contato@dentalhub.com.br" className="hover:text-primary">Contato</a>
+          <a href="/faq" className="hover:text-primary">
+            Perguntas frequentes
+          </a>
+          <a href="/privacidade" className="hover:text-primary">
+            Privacidade
+          </a>
+          <a href="/cookies" className="hover:text-primary">
+            Cookies
+          </a>
+          <a href="/termos" className="hover:text-primary">
+            Termos de uso
+          </a>
+          <a
+            href="mailto:contato@dentalhub.com.br"
+            className="hover:text-primary"
+          >
+            Contato
+          </a>
         </div>
       </div>
     </footer>
   );
 }
-
