@@ -29,7 +29,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import heroDentist from "@/assets/hero-dentista-whatsapp.png";
+import heroFullBleed from "@/assets/hero-fullbleed.jpg";
 import pacienteSorrindo from "@/assets/paciente-sorrindo.png";
 import dentistaCelular from "@/assets/dentista-celular.png";
 
@@ -115,22 +115,46 @@ function Logo() {
 /* ---------------- Hero ---------------- */
 function Hero() {
   return (
-    <section id="hero" className="relative w-full overflow-hidden">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-8 lg:px-8 lg:py-20">
-        {/* Left content */}
-        <div className="relative z-10 max-w-xl">
+    <section
+      id="hero"
+      className="relative w-full overflow-hidden"
+      style={{ minHeight: "calc(100vh - 4rem)" }}
+    >
+      {/* Background image — full bleed */}
+      <img
+        src={heroFullBleed}
+        alt="Dentista sorrindo ao lado de smartphone exibindo mensagem de aniversário no WhatsApp"
+        width={1920}
+        height={1080}
+        fetchPriority="high"
+        className="absolute inset-0 h-full w-full object-cover object-right"
+      />
+
+      {/* Readability gradient overlays */}
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent md:via-background/70 lg:to-transparent"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"
+        aria-hidden="true"
+      />
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center px-4 py-16 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
           <Badge
             variant="secondary"
-            className="mb-6 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary"
+            className="mb-6 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary backdrop-blur"
           >
             Serviço de envio de aniversário
           </Badge>
-          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+          <h1 className="text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Envie mensagens de aniversário{" "}
             <span className="text-primary">automaticamente</span> e fortaleça o
             vínculo com seus pacientes
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
+          <p className="mt-6 max-w-xl text-lg text-muted-foreground">
             Surpreenda seus pacientes, aumente o retorno para sua clínica e gere
             mais faturamento — sem esforço manual.
           </p>
@@ -138,7 +162,7 @@ function Hero() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
-              className="group h-12 rounded-full px-7 text-base"
+              className="group h-12 rounded-full px-7 text-base shadow-lg shadow-primary/20"
               asChild
             >
               <Link to="/signup">
@@ -149,7 +173,7 @@ function Hero() {
             <Button
               size="lg"
               variant="outline"
-              className="group h-12 rounded-full px-7 text-base"
+              className="group h-12 rounded-full bg-background/70 px-7 text-base backdrop-blur"
               onClick={() => smoothScrollTo("como-funciona")}
             >
               Ver como funciona
@@ -157,22 +181,11 @@ function Hero() {
             </Button>
           </div>
 
-          <div className="mt-10 flex flex-wrap gap-x-10 gap-y-5">
+          <div className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
             <HeroFeature icon={Send} label="Enviado via WhatsApp" />
             <HeroFeature icon={Clock} label="100% Automático" />
             <HeroFeature icon={ShieldCheck} label="Seguro e confiável" />
           </div>
-        </div>
-
-        {/* Right image */}
-        <div className="relative w-full">
-          <img
-            src={heroDentist}
-            alt="Dentista sorrindo enquanto mensagem de aniversário é enviada pelo WhatsApp para paciente"
-            width={1264}
-            height={848}
-            className="h-auto w-full object-contain"
-          />
         </div>
       </div>
     </section>
@@ -188,10 +201,10 @@ function HeroFeature({
 }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 backdrop-blur">
         <Icon className="h-5 w-5 text-primary" />
       </div>
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-foreground/80">{label}</span>
     </div>
   );
 }
