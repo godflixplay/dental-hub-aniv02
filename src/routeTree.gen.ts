@@ -35,6 +35,7 @@ import { Route as AuthenticatedDashboardAssinaturaRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardAniversariosRouteImport } from './routes/_authenticated.dashboard.aniversarios'
 import { Route as AuthenticatedDashboardAdminRouteImport } from './routes/_authenticated.dashboard.admin'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated.admin.usuarios'
+import { Route as AuthenticatedAdminModelosRouteImport } from './routes/_authenticated.admin.modelos'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated.admin.logs'
 import { Route as AuthenticatedAdminFinanceiroRouteImport } from './routes/_authenticated.admin.financeiro'
 import { Route as AuthenticatedDashboardAssinaturaCheckoutRouteImport } from './routes/_authenticated.dashboard.assinatura.checkout'
@@ -179,6 +180,12 @@ const AuthenticatedAdminUsuariosRoute =
     path: '/usuarios',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminModelosRoute =
+  AuthenticatedAdminModelosRouteImport.update({
+    id: '/modelos',
+    path: '/modelos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -212,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/modelos': typeof AuthenticatedAdminModelosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
@@ -240,6 +248,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/modelos': typeof AuthenticatedAdminModelosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
@@ -272,6 +281,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/_authenticated/admin/modelos': typeof AuthenticatedAdminModelosRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/dashboard/admin': typeof AuthenticatedDashboardAdminRoute
   '/_authenticated/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/admin/financeiro'
     | '/admin/logs'
+    | '/admin/modelos'
     | '/admin/usuarios'
     | '/dashboard/admin'
     | '/dashboard/aniversarios'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/admin/financeiro'
     | '/admin/logs'
+    | '/admin/modelos'
     | '/admin/usuarios'
     | '/dashboard/admin'
     | '/dashboard/aniversarios'
@@ -363,6 +375,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/admin/financeiro'
     | '/_authenticated/admin/logs'
+    | '/_authenticated/admin/modelos'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/dashboard/admin'
     | '/_authenticated/dashboard/aniversarios'
@@ -578,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/modelos': {
+      id: '/_authenticated/admin/modelos'
+      path: '/modelos'
+      fullPath: '/admin/modelos'
+      preLoaderRoute: typeof AuthenticatedAdminModelosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/logs': {
       id: '/_authenticated/admin/logs'
       path: '/logs'
@@ -605,6 +625,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminFinanceiroRoute: typeof AuthenticatedAdminFinanceiroRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
+  AuthenticatedAdminModelosRoute: typeof AuthenticatedAdminModelosRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -612,6 +633,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminFinanceiroRoute: AuthenticatedAdminFinanceiroRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
+  AuthenticatedAdminModelosRoute: AuthenticatedAdminModelosRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }

@@ -1,94 +1,84 @@
 ## Objetivo
 
-Reescrever todo o conteúdo do FAQ para focar **exclusivamente no serviço de envio automático de mensagens de aniversário pelo WhatsApp** (removendo qualquer menção a "atendente virtual", "robô que responde", "confirmação de consulta", "orientações pós-operatórias", etc.) e exibir essas perguntas/respostas como uma **seção retrátil (accordion)** dentro da landing page principal.
+Criar uma biblioteca de **modelos de posts prontos** (imagem + texto sugerido) que:
+- O **admin** cadastra/sobe pelo painel admin (nova aba "Modelos").
+- O **cliente** vê na aba "Mensagem" (Aniversários) e pode escolher um modelo OU continuar subindo imagem própria. Ao escolher, a imagem do modelo vira a imagem da instância dele e o texto sugerido preenche o campo de mensagem.
 
----
+## Estrutura no Supabase
 
-## 1) Novo conteúdo do FAQ
+### 1. Bucket de storage
+Bucket público `modelos-mensagens` (separado de `imagens-whatsapp` que é por usuário). Apenas admins podem escrever; leitura pública.
 
-Vou reescrever `src/content/legal/faq.md` com perguntas alinhadas ao produto real (Dental Hub — automação de aniversários via WhatsApp), agrupadas em 5 blocos:
+### 2. Nova tabela `modelos_mensagens`
+| coluna | tipo | obs |
+|---|---|---|
+| id | uuid PK | |
+| categoria | text | ex: "aniversario", "datas-comemorativas", "promocional" |
+| titulo | text | rótulo curto do modelo |
+| descricao | text null | opcional |
+| mensagem | text | texto sugerido (suporta `{nome}`) |
+| imagem_url | text | URL pública no bucket |
+| imagem_path | text | path interno (para deletar do storage) |
+| ativo | boolean default true | admin pode ocultar sem deletar |
+| ordem | int default 0 | ordenação na galeria |
+| created_at, updated_at | timestamptz | |
 
-**Sobre o serviço**
-- O que é o Dental Hub?
-- Como funciona o envio automático de mensagens de aniversário?
-- Preciso instalar algo? Funciona pelo navegador?
-- Preciso deixar o computador ligado para o sistema enviar?
-- O sistema funciona para qualquer especialidade odontológica?
+**RLS:**
+- SELECT público para `authenticated` quando `ativo = true`.
+- INSERT/UPDATE/DELETE só para `has_role(auth.uid(), 'admin')`.
 
-**Como começar**
-- Como subo a lista de pacientes? (importação de planilha Excel/CSV com nome, telefone e data de nascimento)
-- É difícil configurar pela primeira vez?
-- Posso testar antes de assinar?
-- Quais dados preciso para cadastrar um paciente?
+**Storage policies em `modelos-mensagens`:**
+- SELECT público.
+- INSERT/UPDATE/DELETE só para admins (via `has_role`).
 
-**Sobre o WhatsApp e mensagens**
-- Posso usar meu WhatsApp pessoal ou precisa ser um número novo?
-- Como conecto meu WhatsApp ao Dental Hub? (QR Code, igual WhatsApp Web)
-- Posso personalizar o texto da mensagem de aniversário?
-- Posso enviar uma imagem ou cartão junto com a mensagem?
-- Em que horário as mensagens são enviadas?
-- O paciente percebe que é automática?
-- E se o paciente responder a mensagem? (cai no seu WhatsApp normalmente)
-- Posso pausar os envios quando estiver de férias?
+Tudo entregue em um único arquivo `supabase-migration-modelos-mensagens.sql` pronto para colar.
 
-**Pagamento e planos**
-- Quais são os valores? (Mensal R$ 37,00 / Trimestral R$ 99,90 / Semestral R$ 188,70 / Anual R$ 355,20)
-- Quais formas de pagamento? (PIX e Cartão)
-- Existe taxa de adesão?
-- Como mudo de plano?
+## Painel Admin — nova aba "Modelos"
 
-**Cancelamento e suporte**
-- Como cancelo o serviço?
-- Tem reembolso? (7 dias)
-- Como falo com o suporte? (e-mail contato@dentalhub.com.br e WhatsApp (21) 98108-9100)
-- O sistema fica fora do ar com frequência?
+- Item de menu novo na `AdminSidebar`: **Modelos** (ícone `Image`), rota `/admin/modelos`.
+- Nova rota `src/routes/_authenticated.admin.modelos.tsx`:
+  - Listagem em grid (cards): thumbnail + título + categoria + switch ativo + botões editar/excluir.
+  - Botão **"Novo modelo"** abre dialog com:
+    - Upload de imagem (preview, máx 5MB, jpg/png/webp).
+    - Categoria (select: Aniversário, Datas comemorativas, Promocional, Outros).
+    - Título, descrição, mensagem sugerida (com hint do `{nome}`), ordem.
+  - Editar reabre o mesmo dialog populado.
+  - Excluir confirma e remove do storage + tabela.
 
-**Removerei completamente** menções a: "robô responde dúvidas", "confirmação de consultas", "lembretes de consulta", "envio de orientações pós-operatórias", "secretária sobrecarregada com tarefas repetitivas" — pois o produto atual entrega apenas aniversários (os outros serviços aparecem como "Em breve").
+## Cliente — aba "Mensagem" (Aniversários)
 
----
+Ajustar `src/components/aniversarios/MensagemTab.tsx`:
 
-## 2) Seção FAQ retrátil na landing page
+- Adicionar uma seção **"Modelos prontos"** acima ou ao lado do upload, mostrando os modelos da categoria `aniversario` (`ativo = true`, ordenados por `ordem`).
+- Layout: carrossel/grade horizontal scrollável de cards (thumb + título).
+- Ao clicar em um modelo:
+  - Preenche `mensagem` no textarea com `modelo.mensagem` (cliente pode editar antes de salvar).
+  - Marca o modelo escolhido visualmente (anel destacado).
+  - Define `pendingModeloUrl = modelo.imagem_url` (a imagem do modelo).
+- Botão **"Usar imagem própria"** já existe (o atual upload). Continua funcionando — se o usuário sobe arquivo, o modelo selecionado é desmarcado.
+- No `handleSave`, se houver modelo selecionado e nenhum `pendingFile`:
+  - Em vez de upload, baixa a imagem do modelo (`fetch` → `Blob`) e faz upload no bucket próprio do usuário (`imagens-whatsapp/{userId}/{instance}/imagem.{ext}`) usando o helper `uploadInstanceImage` já existente. Isso mantém a invariante atual: `whatsapp_instances.imagem_url` aponta sempre para o bucket do usuário (n8n não muda).
+- Preview no card direito segue idêntico (continua mostrando `previewImage`).
 
-Em `src/components/landing/LandingPage.tsx`:
+## Arquivos novos / alterados
 
-- Adicionar uma nova seção `<FAQ />` entre `<Benefits />` e `<FinalCta />`.
-- Usar o componente `Accordion` já existente em `src/components/ui/accordion.tsx` (modo `type="single"` `collapsible`, com 1 item aberto por vez).
-- Estilo coerente com as outras seções (header com chip "Perguntas frequentes", título "Tire suas dúvidas", largura `max-w-3xl`, fundo claro).
-- As perguntas exibidas na landing serão um **subconjunto enxuto (8–10 perguntas)** das mais relevantes — não todas, para não poluir. A página `/faq` continuará tendo a versão completa.
-- Adicionar "Perguntas frequentes" ao array `navItems` do `Header` e fazer o link rolar até `#faq` (id na seção).
-- O link "Perguntas frequentes" no rodapé continuará apontando para `/faq` (versão completa).
+**Novos**
+- `supabase-migration-modelos-mensagens.sql` — tabela + bucket + policies.
+- `src/routes/_authenticated.admin.modelos.tsx` — CRUD admin.
+- `src/components/admin/ModeloDialog.tsx` — dialog reutilizado para criar/editar.
+- `src/components/aniversarios/ModelosGaleria.tsx` — galeria dos modelos exibida no cliente.
 
-Estrutura das perguntas na landing (resumo):
-1. Como funciona o envio automático de mensagens de aniversário?
-2. Preciso instalar algo no computador?
-3. Como subo a lista dos meus pacientes?
-4. Posso usar meu WhatsApp pessoal?
-5. Posso personalizar o texto da mensagem?
-6. Em que horário as mensagens são enviadas?
-7. Quais são os valores dos planos?
-8. Como cancelo se não gostar?
+**Alterados**
+- `src/components/admin/AdminSidebar.tsx` — adicionar item "Modelos".
+- `src/components/aniversarios/MensagemTab.tsx` — integrar galeria + lógica de "copiar imagem do modelo para o bucket do usuário".
 
-Cada pergunta como `<AccordionItem>` com `<AccordionTrigger>` (pergunta) e `<AccordionContent>` (resposta em 1–3 frases).
+## Performance / segurança
 
----
+- Galeria do cliente: query simples, `select` com `limit 50`, cache via React Query.
+- Admin: somente acessível dentro de `_authenticated/admin` (já tem guard de role).
+- RLS impede cliente de inserir/alterar modelos.
 
-## 3) Página `/faq` (mantida)
+## Confirmações antes de implementar
 
-`src/routes/faq.tsx` continua existindo e renderizando o markdown completo via `<Markdown source={faqMd} />`. Apenas o conteúdo do `.md` é atualizado — sem mudanças estruturais na rota.
-
----
-
-## Arquivos a editar
-
-- `src/content/legal/faq.md` — reescrever completamente o conteúdo focando em aniversários
-- `src/components/landing/LandingPage.tsx` — adicionar seção `<FAQ />` retrátil + item no menu do header
-
-## Arquivos a criar
-
-- Nenhum (o componente `Accordion` já existe)
-
-## O que NÃO muda
-
-- Rota `/faq` continua funcional (versão completa)
-- Layout geral, cores, hero, planos, footer, etc.
-- Componente `Markdown.tsx` e `LegalLayout.tsx`
+1. Categorias iniciais: **Aniversário, Datas comemorativas, Promocional, Outros** — ok ou prefere outras?
+2. Por enquanto, modelos aparecem **só na aba Mensagem de Aniversários** (campanhas/lembretes ficam para depois) — ok?

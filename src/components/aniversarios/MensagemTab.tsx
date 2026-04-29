@@ -26,6 +26,10 @@ import {
   assertPersistableImageUrl,
   uploadInstanceImage,
 } from "@/components/aniversarios/imagem-upload";
+import {
+  ModelosGaleria,
+  type ModeloMensagem,
+} from "@/components/aniversarios/ModelosGaleria";
 
 interface ConfigMensagem {
   id: string;
@@ -42,6 +46,9 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [selectedModelo, setSelectedModelo] = useState<ModeloMensagem | null>(
+    null,
+  );
   const [saving, setSaving] = useState(false);
   // Garante que o sync com a query só roda 1× por payload novo do servidor.
   const lastSyncedIdRef = useRef<string | null>(null);
@@ -138,9 +145,21 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
       return URL.createObjectURL(file);
     });
     setPendingFile(file);
+    setSelectedModelo(null);
     toast.success("Imagem selecionada! Clique em Salvar para confirmar.");
 
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleSelectModelo = (modelo: ModeloMensagem) => {
+    setSelectedModelo(modelo);
+    setMensagem(modelo.mensagem);
+    setPendingFile(null);
+    setLocalPreviewUrl((current) => {
+      if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
+      return modelo.imagem_url;
+    });
+    toast.success("Modelo aplicado! Edite o texto se quiser e clique em Salvar.");
   };
 
   // Lista os arquivos do folder {user_id}/{instance_name}/ e apaga todos
@@ -201,6 +220,7 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
       return null;
     });
     setPendingFile(null);
+    setSelectedModelo(null);
     setImagemUrl(null);
 
     // Apaga do Storage de verdade — senão a "imagem antiga" persiste
@@ -215,6 +235,39 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
     }
   };
 
+  // Quando o usuário escolheu um modelo, baixamos a imagem do bucket público
+  // de modelos e re-uploadeamos no bucket próprio do usuário, mantendo a
+  // invariante: whatsapp_instances.imagem_url SEMPRE aponta para
+  // imagens-whatsapp/{userId}/{instance}/imagem.{ext} (consumido pelo n8n).
+  const uploadModeloImage = async (modelo: ModeloMensagem): Promise<string> => {
+    if (!user) throw new Error("Usuário não autenticado");
+    const instanceName = instanceQuery.data?.instance_name;
+    if (!instanceName) {
+      throw new Error(
+        "Conecte uma instância do WhatsApp antes de aplicar o modelo.",
+      );
+    }
+    const resp = await fetch(modelo.imagem_url);
+    if (!resp.ok) throw new Error("Não foi possível baixar a imagem do modelo");
+    const blob = await resp.blob();
+    const ext =
+      (modelo.imagem_url.split(".").pop() || "png")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "") || "png";
+    const file = new File([blob], `imagem.${ext}`, {
+      type: blob.type || "image/png",
+    });
+    return withRequestTimeout(
+      uploadInstanceImage({
+        userId: user.id,
+        instanceName,
+        file,
+        storage: supabase.storage,
+      }),
+      "A aplicação do modelo",
+    );
+  };
+
   const handleSave = async () => {
     if (!user) return;
     if (!mensagem.trim()) {
@@ -226,9 +279,7 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
       let nextImagemUrl = imagemUrl;
 
       if (pendingFile) {
-        // Se o usuário escolheu trocar a imagem, o upload é OBRIGATÓRIO.
-        // Falha no upload ABORTA o save — nunca gravamos imagem_url null/antigo
-        // quando o intent do usuário era trocar a imagem.
+        // Upload de imagem própria
         try {
           nextImagemUrl = await uploadPendingFile();
         } catch (uploadErr) {
@@ -245,10 +296,26 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
         }
 
         try {
-          // Invariante: upload pendente NUNCA pode resultar em null/empty.
           assertPersistableImageUrl(nextImagemUrl, true);
         } catch {
           toast.error("Não foi possível obter a URL pública da imagem.");
+          setSaving(false);
+          return;
+        }
+      } else if (selectedModelo) {
+        // Aplicação de modelo: copia imagem do bucket público para o bucket
+        // do usuário, mantendo o n8n apontando para o caminho próprio dele.
+        try {
+          nextImagemUrl = await uploadModeloImage(selectedModelo);
+        } catch (modeloErr) {
+          console.error(
+            "[MensagemTab] aplicação do modelo falhou",
+            modeloErr,
+          );
+          toast.error(
+            getAniversariosErrorMessage(modeloErr) ||
+              "Falha ao aplicar o modelo. Tente novamente.",
+          );
           setSaving(false);
           return;
         }
@@ -308,6 +375,7 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
         queryKey: ["aniv:instance", userId],
       });
       setPendingFile(null);
+      setSelectedModelo(null);
       setLocalPreviewUrl((current) => {
         if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
         return null;
@@ -360,8 +428,14 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
             </p>
           </div>
 
+          <ModelosGaleria
+            categoria="aniversario"
+            selectedId={selectedModelo?.id ?? null}
+            onSelect={handleSelectModelo}
+          />
+
           <div>
-            <Label>Imagem (opcional)</Label>
+            <Label>Sua própria imagem (opcional)</Label>
             <input
               ref={fileRef}
               type="file"
