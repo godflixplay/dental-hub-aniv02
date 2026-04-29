@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Mail,
   MessageCircle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
@@ -39,6 +40,7 @@ const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
   { title: "Logs", url: "/admin/logs", icon: FileText },
+  { title: "Modelos", url: "/admin/modelos", icon: ImageIcon },
   { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign },
 ];
 
