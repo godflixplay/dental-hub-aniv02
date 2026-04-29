@@ -268,13 +268,31 @@ export const listarPlanos = createServerFn({ method: "POST" })
 // ============================================================
 // criarAssinatura
 // ============================================================
-// Mapa ciclo (interno) → cycle (Asaas) e dias até a próxima cobrança
+// Mapa ciclo (interno) → cycle (Asaas) para subscriptions PIX
 const CICLO_TO_ASAAS: Record<string, string> = {
   mensal: "MONTHLY",
   trimestral: "QUARTERLY",
   semestral: "SEMIANNUALLY",
   anual: "YEARLY",
 };
+
+// Número máximo de parcelas no cartão por ciclo de plano
+const MAX_PARCELAS_POR_CICLO: Record<string, number> = {
+  mensal: 1,
+  trimestral: 3,
+  semestral: 6,
+  anual: 12,
+};
+
+interface AsaasPayment {
+  id: string;
+  customer: string;
+  value: number;
+  status: string;
+  invoiceUrl?: string;
+  bankSlipUrl?: string;
+  dueDate?: string;
+}
 
 export const criarAssinatura = createServerFn({ method: "POST" })
   .inputValidator(
@@ -326,42 +344,106 @@ export const criarAssinatura = createServerFn({ method: "POST" })
       }),
     })) as AsaasCustomer;
 
-    // 2) Criar subscription recorrente no ciclo correto
+    // 2) Calcular próxima cobrança (amanhã)
     const nextDue = new Date();
     nextDue.setDate(nextDue.getDate() + 1);
     const nextDueDate = nextDue.toISOString().slice(0, 10);
 
-    const cycleAsaas = CICLO_TO_ASAAS[plano.ciclo as string] ?? "MONTHLY";
+    const valorPlano = Number(plano.valor);
 
-    const subscription = (await asaasRequest("/subscriptions", {
+    // ====================================================
+    // RAMO PIX → assinatura recorrente (Asaas /subscriptions)
+    // ====================================================
+    if (data.billingType === "PIX") {
+      const cycleAsaas = CICLO_TO_ASAAS[plano.ciclo as string] ?? "MONTHLY";
+
+      const subscription = (await asaasRequest("/subscriptions", {
+        method: "POST",
+        body: JSON.stringify({
+          customer: customer.id,
+          billingType: "PIX",
+          value: valorPlano,
+          nextDueDate,
+          cycle: cycleAsaas,
+          description: `Dental Hub — ${plano.nome}`,
+          externalReference: userId,
+        }),
+      })) as AsaasSubscription;
+
+      const { data: novaAssinatura, error: insertErr } = await supabase
+        .from("assinaturas")
+        .insert({
+          user_id: userId,
+          plano_id: plano.id,
+          asaas_customer_id: customer.id,
+          asaas_subscription_id: subscription.id,
+          status: "ativa",
+          proxima_cobranca: subscription.nextDueDate,
+        })
+        .select()
+        .single();
+      if (insertErr) throw new Error(insertErr.message);
+
+      return { assinatura: novaAssinatura, checkoutUrl: null };
+    }
+
+    // ====================================================
+    // RAMO CARTÃO → pagamento único parcelado (Asaas /payments)
+    // O cliente escolhe o número de parcelas no checkout do
+    // Asaas (até maxParcelas). Os juros já vêm calculados pela
+    // Asaas e exibidos transparentemente.
+    // ====================================================
+    const maxParcelas =
+      MAX_PARCELAS_POR_CICLO[plano.ciclo as string] ?? 1;
+
+    const paymentBody: Record<string, unknown> = {
+      customer: customer.id,
+      billingType: "CREDIT_CARD",
+      dueDate: nextDueDate,
+      description: `Dental Hub — ${plano.nome}`,
+      externalReference: userId,
+    };
+
+    if (maxParcelas > 1) {
+      paymentBody.installmentCount = maxParcelas;
+      paymentBody.totalValue = valorPlano;
+    } else {
+      paymentBody.value = valorPlano;
+    }
+
+    const payment = (await asaasRequest("/payments", {
       method: "POST",
-      body: JSON.stringify({
-        customer: customer.id,
-        billingType: data.billingType,
-        value: Number(plano.valor),
-        nextDueDate,
-        cycle: cycleAsaas,
-        description: `Dental Hub — ${plano.nome}`,
-        externalReference: userId,
-      }),
-    })) as AsaasSubscription;
+      body: JSON.stringify(paymentBody),
+    })) as AsaasPayment;
 
-    // 3) Persistir no Supabase
+    // Persistimos a assinatura (ainda sem subscription_id, é pagamento único)
+    // proxima_cobranca = data limite de acesso (mesma data que a renovação seria).
+    // Para cartão único, calculamos o fim do ciclo a partir de hoje.
+    const fimCiclo = new Date();
+    if (plano.ciclo === "trimestral") fimCiclo.setMonth(fimCiclo.getMonth() + 3);
+    else if (plano.ciclo === "semestral") fimCiclo.setMonth(fimCiclo.getMonth() + 6);
+    else if (plano.ciclo === "anual") fimCiclo.setFullYear(fimCiclo.getFullYear() + 1);
+    else fimCiclo.setMonth(fimCiclo.getMonth() + 1);
+    const fimCicloStr = fimCiclo.toISOString().slice(0, 10);
+
     const { data: novaAssinatura, error: insertErr } = await supabase
       .from("assinaturas")
       .insert({
         user_id: userId,
         plano_id: plano.id,
         asaas_customer_id: customer.id,
-        asaas_subscription_id: subscription.id,
+        asaas_subscription_id: null,
         status: "ativa",
-        proxima_cobranca: subscription.nextDueDate,
+        proxima_cobranca: fimCicloStr,
       })
       .select()
       .single();
     if (insertErr) throw new Error(insertErr.message);
 
-    return { assinatura: novaAssinatura };
+    return {
+      assinatura: novaAssinatura,
+      checkoutUrl: payment.invoiceUrl ?? null,
+    };
   });
 
 // ============================================================
