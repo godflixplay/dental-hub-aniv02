@@ -148,9 +148,21 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
       return URL.createObjectURL(file);
     });
     setPendingFile(file);
+    setSelectedModelo(null);
     toast.success("Imagem selecionada! Clique em Salvar para confirmar.");
 
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleSelectModelo = (modelo: ModeloMensagem) => {
+    setSelectedModelo(modelo);
+    setMensagem(modelo.mensagem);
+    setPendingFile(null);
+    setLocalPreviewUrl((current) => {
+      if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
+      return modelo.imagem_url;
+    });
+    toast.success("Modelo aplicado! Edite o texto se quiser e clique em Salvar.");
   };
 
   // Lista os arquivos do folder {user_id}/{instance_name}/ e apaga todos
