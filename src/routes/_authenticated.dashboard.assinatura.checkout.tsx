@@ -82,7 +82,7 @@ function CheckoutPage() {
     }
     setSubmitting(true);
     try {
-      await criarAssinatura({
+      const res = await criarAssinatura({
         data: {
           accessToken,
           planoSlug,
@@ -92,12 +92,16 @@ function CheckoutPage() {
           telefone: telefone || undefined,
         },
       });
-      toast.success(
-        billingType === "PIX"
-          ? "Assinatura criada! Acesse 'Minha Assinatura' para ver o QR Code do PIX."
-          : "Assinatura criada! Acesse 'Minha Assinatura' para concluir o pagamento.",
-      );
-      navigate({ to: "/dashboard/assinatura" });
+      if (billingType === "CREDIT_CARD" && res.checkoutUrl) {
+        toast.success("Abrindo checkout do cartão para finalizar o pagamento…");
+        window.open(res.checkoutUrl, "_blank");
+        navigate({ to: "/dashboard/assinatura" });
+      } else {
+        toast.success(
+          "Assinatura criada! Acesse 'Minha Assinatura' para ver o QR Code do PIX.",
+        );
+        navigate({ to: "/dashboard/assinatura" });
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar assinatura");
     } finally {

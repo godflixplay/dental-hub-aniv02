@@ -466,19 +466,21 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
       .in("status", ["trial", "ativa", "atrasada"])
       .maybeSingle();
 
-    if (!assinatura?.asaas_subscription_id) {
+    if (!assinatura) {
       throw new Error("Nenhuma assinatura ativa para cancelar");
     }
 
-    // Desliga renovação no Asaas (não emite mais novas cobranças)
-    try {
-      await asaasRequest(
-        `/subscriptions/${assinatura.asaas_subscription_id}`,
-        { method: "DELETE" },
-      );
-    } catch (e) {
-      // Se a subscription já foi deletada no Asaas, segue em frente
-      console.warn("[asaas] DELETE subscription falhou, prosseguindo:", e);
+    // Cartão único (sem subscription_id) → não há renovação para desligar.
+    // Apenas marca como cancelada; acesso permanece até proxima_cobranca.
+    if (assinatura.asaas_subscription_id) {
+      try {
+        await asaasRequest(
+          `/subscriptions/${assinatura.asaas_subscription_id}`,
+          { method: "DELETE" },
+        );
+      } catch (e) {
+        console.warn("[asaas] DELETE subscription falhou, prosseguindo:", e);
+      }
     }
 
     const { error } = await supabase
