@@ -18,6 +18,10 @@ import {
   Bell,
   ChevronRight,
   HelpCircle,
+  Gift,
+  Trophy,
+  BarChart3,
+  Star,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -45,8 +49,10 @@ export function LandingPage() {
         <Hero />
         <Features />
         <Benefits />
-        <Testimonials />
         <HowItWorks />
+        <WhyMatters />
+        <Pricing />
+        <Testimonials />
         <FAQ />
         <FinalCta />
       </main>
@@ -68,6 +74,7 @@ function Header() {
     { label: "Serviço de Aniversário", id: "hero" },
     { label: "Como funciona", id: "como-funciona" },
     { label: "Benefícios", id: "beneficios" },
+    { label: "Planos", id: "planos" },
     { label: "Depoimentos", id: "depoimentos" },
     { label: "FAQ", id: "faq" },
   ];
@@ -685,6 +692,199 @@ function FinalCta() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Why this service matters (4 cards) ---------------- */
+function WhyMatters() {
+  const reasons = [
+    {
+      icon: Gift,
+      title: "Timing perfeito",
+      description: "Aniversário é uma data emocional e marcante.",
+      color: "text-emerald-600 bg-emerald-100",
+    },
+    {
+      icon: Trophy,
+      title: "Baixa concorrência",
+      description: "Poucas clínicas fazem isso. Se destaque e conquiste!",
+      color: "text-amber-600 bg-amber-100",
+    },
+    {
+      icon: Heart,
+      title: "Alto impacto emocional",
+      description: "Pequenas atitudes geram grandes resultados.",
+      color: "text-primary bg-primary/10",
+    },
+    {
+      icon: BarChart3,
+      title: "Excelente custo-benefício",
+      description: "Alto retorno com baixo investimento.",
+      color: "text-purple-600 bg-purple-100",
+    },
+  ];
+
+  return (
+    <section className="bg-background py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Por que esse serviço faz a diferença?
+          </h2>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {reasons.map((r) => (
+            <Card
+              key={r.title}
+              className="gap-0 border-border/60 p-6 transition-all hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl ${r.color}`}
+              >
+                <r.icon className="h-6 w-6" strokeWidth={2.2} />
+              </div>
+              <h3 className="mt-4 text-base font-bold">{r.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                {r.description}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- Pricing ---------------- */
+function Pricing() {
+  const plans = [
+    {
+      slug: "mensal",
+      nome: "Mensal",
+      valor: 37,
+      perMes: 37,
+      ciclo: "/mês",
+      descricao: "Ideal para começar",
+      destaque: false,
+    },
+    {
+      slug: "trimestral",
+      nome: "Trimestral",
+      valor: 99,
+      perMes: 33,
+      ciclo: "/trimestre",
+      descricao: "Renovação a cada 3 meses",
+      destaque: false,
+    },
+    {
+      slug: "semestral",
+      nome: "Semestral",
+      valor: 187,
+      perMes: 32,
+      ciclo: "/semestre",
+      descricao: "Renovação a cada 6 meses",
+      destaque: false,
+    },
+    {
+      slug: "anual",
+      nome: "Anual",
+      valor: 357,
+      perMes: 29,
+      ciclo: "/ano",
+      descricao: "Melhor custo-benefício",
+      destaque: true,
+    },
+  ];
+
+  return (
+    <section id="planos" className="bg-secondary/40 py-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Escolha o plano ideal para sua clínica
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Pague no PIX ou parcele no cartão de crédito. Cancele quando quiser.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {plans.map((p) => (
+            <Card
+              key={p.slug}
+              className={`relative gap-0 p-6 transition-all hover:-translate-y-1 hover:shadow-xl ${
+                p.destaque
+                  ? "border-primary bg-primary/5 ring-2 ring-primary"
+                  : "border-border/60"
+              }`}
+            >
+              {p.destaque && (
+                <div className="absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-md whitespace-nowrap">
+                  <Star className="h-3 w-3 fill-current" />
+                  Melhor escolha
+                </div>
+              )}
+              <h3 className="text-lg font-bold">{p.nome}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {p.descricao}
+              </p>
+
+              <div className="mt-5 flex items-baseline gap-1">
+                <span className="text-3xl font-bold">R$ {p.valor}</span>
+                <span className="text-sm text-muted-foreground">{p.ciclo}</span>
+              </div>
+              {p.perMes < p.valor && (
+                <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  Equivale a R$ {p.perMes}/mês
+                </p>
+              )}
+
+              <ul className="mt-5 space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>Envio automático no aniversário</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>Mensagens personalizadas + imagem</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>Pacientes ilimitados</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>Suporte por WhatsApp</span>
+                </li>
+              </ul>
+
+              <Button
+                size="lg"
+                variant={p.destaque ? "default" : "outline"}
+                className="mt-6 w-full rounded-full"
+                asChild
+              >
+                <Link to="/signup">Assinar {p.nome}</Link>
+              </Button>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-2 text-center text-xs text-muted-foreground">
+          <p>
+            <ShieldCheck className="mr-1 inline h-3.5 w-3.5" />
+            Pagamento seguro processado pela Asaas. PIX com confirmação imediata.
+          </p>
+          <p>
+            No cartão você escolhe parcelar em até{" "}
+            <span className="font-semibold">3x</span> (trimestral),{" "}
+            <span className="font-semibold">6x</span> (semestral) ou{" "}
+            <span className="font-semibold">12x</span> (anual).
+          </p>
         </div>
       </div>
     </section>
