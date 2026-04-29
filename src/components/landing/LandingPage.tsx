@@ -18,6 +18,10 @@ import {
   Bell,
   ChevronRight,
   HelpCircle,
+  Gift,
+  Trophy,
+  BarChart3,
+  Star,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -45,8 +49,10 @@ export function LandingPage() {
         <Hero />
         <Features />
         <Benefits />
-        <Testimonials />
         <HowItWorks />
+        <WhyMatters />
+        <Pricing />
+        <Testimonials />
         <FAQ />
         <FinalCta />
       </main>
@@ -68,6 +74,7 @@ function Header() {
     { label: "Serviço de Aniversário", id: "hero" },
     { label: "Como funciona", id: "como-funciona" },
     { label: "Benefícios", id: "beneficios" },
+    { label: "Planos", id: "planos" },
     { label: "Depoimentos", id: "depoimentos" },
     { label: "FAQ", id: "faq" },
   ];
