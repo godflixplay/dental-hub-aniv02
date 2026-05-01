@@ -131,7 +131,7 @@ function Logo() {
       <img
         src={logoDentalHub}
         alt="DentalHub"
-        className="h-9 w-auto"
+        className="h-[50px] w-auto"
       />
     </div>
   );
