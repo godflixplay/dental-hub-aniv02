@@ -45,6 +45,7 @@ import prova2 from "@/assets/prova-2.png";
 import prova3 from "@/assets/prova-3.png";
 import prova4 from "@/assets/prova-4.png";
 import prova5 from "@/assets/prova-5.png";
+import logoDentalHub from "@/assets/dentalhub-logo.png";
 import { useRef } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import {
