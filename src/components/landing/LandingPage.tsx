@@ -55,6 +55,7 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
+import { fbTrack } from "@/lib/fbpixel";
 
 export function LandingPage() {
   return (
@@ -117,7 +118,9 @@ function Header() {
             <Link to="/login">Login</Link>
           </Button>
           <Button className="rounded-full px-5" asChild>
-            <Link to="/signup">Começar agora</Link>
+            <Link to="/signup" onClick={() => fbTrack("Lead", { source: "header_cta" })}>
+              Começar agora
+            </Link>
           </Button>
         </div>
       </div>
@@ -190,7 +193,7 @@ function Hero() {
               className="group h-12 rounded-full px-7 text-base shadow-lg shadow-primary/20"
               asChild
             >
-              <Link to="/signup">
+              <Link to="/signup" onClick={() => fbTrack("Lead", { source: "hero_cta" })}>
                 Começar agora
                 <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
@@ -664,7 +667,7 @@ function FinalCta() {
               className="group h-12 w-full rounded-full px-7 text-base font-semibold text-primary lg:w-auto"
               asChild
             >
-              <Link to="/signup">
+              <Link to="/signup" onClick={() => fbTrack("Lead", { source: "final_cta" })}>
                 Começar agora
                 <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
@@ -675,7 +678,12 @@ function FinalCta() {
               className="group h-12 w-full rounded-full border-primary-foreground/30 bg-transparent px-7 text-base font-semibold text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground lg:w-auto"
               asChild
             >
-              <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://wa.me/5500000000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => fbTrack("Contact", { method: "whatsapp" })}
+              >
                 <Bell className="mr-1 h-4 w-4" />
                 Falar com especialista
               </a>
@@ -876,7 +884,18 @@ function Pricing() {
                 className="mt-6 w-full rounded-full"
                 asChild
               >
-                <Link to="/signup">Assinar {p.nome}</Link>
+                <Link
+                  to="/signup"
+                  onClick={() =>
+                    fbTrack("InitiateCheckout", {
+                      content_name: p.nome,
+                      value: typeof p.valor === "number" ? p.valor : undefined,
+                      currency: "BRL",
+                    })
+                  }
+                >
+                  Assinar {p.nome}
+                </Link>
               </Button>
             </Card>
           ))}
