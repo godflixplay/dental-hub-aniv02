@@ -226,15 +226,17 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
     }
   }, [webhookConfigQuery.data]);
 
-  const handleSaveWebhookModo = async (novoModo: "teste" | "producao") => {
+  const webhookModoSalvo = webhookConfigQuery.data ?? "teste";
+  const webhookDirty = webhookModo !== webhookModoSalvo;
+
+  const handleSaveWebhookModo = async () => {
     if (!userId) return;
-    setWebhookModo(novoModo);
     setSavingWebhook(true);
     try {
       const { error } = await supabase
         .from("config_webhook")
         .upsert(
-          { user_id: userId, modo: novoModo, updated_at: new Date().toISOString() },
+          { user_id: userId, modo: webhookModo, updated_at: new Date().toISOString() },
           { onConflict: "user_id" },
         );
       if (error) throw error;
@@ -242,7 +244,7 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         queryKey: ["aniv:webhook-config", userId],
       });
       toast.success(
-        `Modo ${novoModo === "producao" ? "Produção" : "Teste"} salvo.`,
+        `Modo ${webhookModo === "producao" ? "Produção" : "Teste"} salvo.`,
       );
     } catch (err) {
       toast.error(
@@ -631,11 +633,11 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid gap-2 sm:grid-cols-[200px_1fr] sm:items-center">
+          <div className="grid gap-2 sm:grid-cols-[200px_1fr_auto] sm:items-center">
             <Label>Modo do webhook</Label>
             <Select
               value={webhookModo}
-              onValueChange={(v) => handleSaveWebhookModo(v as "teste" | "producao")}
+              onValueChange={(v) => setWebhookModo(v as "teste" | "producao")}
               disabled={savingWebhook || webhookConfigQuery.isLoading}
             >
               <SelectTrigger>
@@ -646,9 +648,17 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
                 <SelectItem value="producao">Modo Produção</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              onClick={handleSaveWebhookModo}
+              disabled={savingWebhook || !webhookDirty || webhookConfigQuery.isLoading}
+            >
+              {savingWebhook ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
           <div className="rounded-md border bg-muted/30 p-3 text-xs">
-            <p className="mb-1 font-medium text-muted-foreground">URL ativa:</p>
+            <p className="mb-1 font-medium text-muted-foreground">
+              URL ativa {webhookDirty && <span className="text-amber-600">(não salvo)</span>}:
+            </p>
             <code className="break-all text-foreground">{WEBHOOK_URLS[webhookModo]}</code>
           </div>
         </CardContent>
