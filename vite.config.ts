@@ -1,33 +1,27 @@
-import { defineConfig } from "vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import tsConfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import path from "node:path";
 
-// Config para deploy SSR na Vercel (Node runtime).
-// IMPORTANTE: removido o preset @lovable.dev/vite-tanstack-config e o plugin
-// do Cloudflare. Isso QUEBRA o preview da Lovable, mas é necessário para o
-// build SSR rodar como serverless function Node na Vercel.
-//
-// Output esperado:
-//   dist/client/   -> assets estáticos (servidos pela Vercel CDN)
-//   dist/server/   -> bundle SSR (chamado por /api/index.js)
+const isVercelBuild = process.env.VERCEL === "1";
+
 export default defineConfig({
-  plugins: [
-    tsConfigPaths(),
-    tailwindcss(),
-    tanstackStart(),
-    viteReact(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+  // Lovable preview precisa do build Cloudflare/Worker para server functions.
+  // Vercel continua usando o build SSR Node consumido por api/index.js.
+  cloudflare: isVercelBuild ? false : { viteEnvironment: { name: "ssr" } },
+  vite: {
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+      dedupe: [
+        "react",
+        "react-dom",
+        "@tanstack/react-router",
+        "@tanstack/react-query",
+      ],
     },
-    dedupe: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-query"],
-  },
-  server: {
-    host: "::",
-    port: 8080,
+    server: {
+      host: "::",
+      port: 8080,
+    },
   },
 });
