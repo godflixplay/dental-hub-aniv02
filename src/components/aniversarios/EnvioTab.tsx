@@ -501,13 +501,27 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         20000,
       );
 
+      console.log("[EnvioTab] resultado do webhook:", result);
       if (!result.success) {
-        toast.error(result.error);
+        toast.error(result.error, {
+          description: result.debugPayload
+            ? `Imagem: ${result.debugPayload.imagem_fonte} | Instância: ${result.debugPayload.nome_instancia}`
+            : undefined,
+          duration: 8000,
+        });
         return;
       }
 
+      const fonte = result.debugPayload?.imagem_fonte ?? "none";
       toast.success(
         `Disparo enviado ao n8n (${result.modo === "producao" ? "Produção" : "Teste"}) para ${nome}.`,
+        {
+          description:
+            fonte === "none"
+              ? "Sem imagem no payload."
+              : `Imagem enviada (origem: ${fonte}).`,
+          duration: 6000,
+        },
       );
 
       // Marca a query como stale para disparar refetch automático em paralelo
