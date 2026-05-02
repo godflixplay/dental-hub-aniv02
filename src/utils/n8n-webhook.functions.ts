@@ -169,15 +169,14 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       webhookConfig?.modo,
     );
 
-    // Payload do envio de teste — apenas os campos exigidos pelo n8n.
+    // Payload do envio de teste — campos exigidos pelo n8n.
     const payload = {
       telefone,
       nome,
       nome_instancia: nomeInstancia,
+      mensagem,
+      imagem_url: imagemUrl ?? "",
     };
-    // Mantém referências para evitar warnings de variáveis não utilizadas.
-    void mensagem;
-    void imagemUrl;
     void apiUrl;
     void token;
 
