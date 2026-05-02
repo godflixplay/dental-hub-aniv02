@@ -5,9 +5,9 @@ import { z } from "zod";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
 
 const N8N_TEST_WEBHOOK_URL =
-  "https://n8n.vendavocenegocios.com.br/webhook-test/enviar-teste";
+  "https://n8n.vendavocenegocios.com.br/webhook-test/1a26f671-f9b2-4c65-b6a2-33000350a7a4";
 const N8N_PROD_WEBHOOK_URL =
-  "https://webhook.vendavocenegocios.com.br/webhook/enviar-teste";
+  "https://webhook.vendavocenegocios.com.br/webhook/1a26f671-f9b2-4c65-b6a2-33000350a7a4";
 
 function resolveWebhookUrl(modo: string | null | undefined): {
   url: string;
