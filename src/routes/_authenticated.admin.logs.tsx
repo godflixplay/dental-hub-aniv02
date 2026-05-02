@@ -137,7 +137,14 @@ function agrupar(
     const instKey = r.instancia ?? "—";
     let inst = u.instancias.find((i) => i.instancia === instKey);
     if (!inst) {
-      inst = { instancia: instKey, linhas: [], total: 0, enviados: 0, erros: 0 };
+      inst = {
+        instancia: instKey,
+        owner_number: ownerNumberByInstance.get(instKey) ?? null,
+        linhas: [],
+        total: 0,
+        enviados: 0,
+        erros: 0,
+      };
       u.instancias.push(inst);
     }
 
