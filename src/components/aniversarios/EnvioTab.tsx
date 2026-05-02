@@ -451,6 +451,10 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       toast.error("Configure sua mensagem na aba Mensagem");
       return;
     }
+    if (webhookDirty) {
+      toast.error("Clique em Salvar para usar o webhook selecionado.");
+      return;
+    }
 
     const mensagemTemplate = config?.mensagem?.trim();
     if (!mensagemTemplate) {
@@ -506,7 +510,9 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         return;
       }
 
-      toast.success(`Disparo enviado ao n8n para ${nome}.`);
+      toast.success(
+        `Disparo enviado ao n8n (${result.modo === "producao" ? "Produção" : "Teste"}) para ${nome}.`,
+      );
 
       // Marca a query como stale para disparar refetch automático em paralelo
       // ao loop manual de retry abaixo (Realtime + invalidate + retry concorrem).
@@ -604,8 +610,8 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
                   ? "Mensagem Configurada"
                   : "Mensagem Não Configurada"}
               </Badge>
-              <Badge variant={webhookModo === "producao" ? "default" : "secondary"}>
-                Webhook: {webhookModo === "producao" ? "Produção" : "Teste"}
+              <Badge variant={webhookModoSalvo === "producao" ? "default" : "secondary"}>
+                Webhook salvo: {webhookModoSalvo === "producao" ? "Produção" : "Teste"}
               </Badge>
             </div>
           </div>
@@ -657,9 +663,14 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
           </div>
           <div className="rounded-md border bg-muted/30 p-3 text-xs">
             <p className="mb-1 font-medium text-muted-foreground">
-              URL ativa {webhookDirty && <span className="text-amber-600">(não salvo)</span>}:
+              URL selecionada {webhookDirty && <span className="text-amber-600">(não salvo)</span>}:
             </p>
             <code className="break-all text-foreground">{WEBHOOK_URLS[webhookModo]}</code>
+            {webhookDirty && (
+              <p className="mt-2 text-muted-foreground">
+                O botão Enviar Teste continuará usando o modo salvo até você clicar em Salvar.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -753,7 +764,9 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
                 ? "Conecte o WhatsApp na aba 'WhatsApp' antes de enviar."
                 : !hasConfiguredMessage
                   ? "Configure sua mensagem na aba 'Mensagem' antes de enviar."
-                  : null;
+                  : webhookDirty
+                    ? "Clique em Salvar para usar o webhook selecionado antes de enviar."
+                    : null;
             return (
               <div className="space-y-2">
                 <Button
