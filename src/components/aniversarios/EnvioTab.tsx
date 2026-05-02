@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getInstanceStatus } from "@/utils/evolution.functions";
@@ -79,6 +80,7 @@ const lastEvolutionSyncByUser = new Map<string, number>();
 export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {}) {
   const { user, session } = useAuth();
   const queryClient = useQueryClient();
+  const triggerN8nTestWebhookFn = useServerFn(triggerN8nTestWebhook);
   const userId = user?.id;
 
   const [instanceStatus, setInstanceStatus] = useState<string>("disconnected");
@@ -482,7 +484,7 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       // O frontend NÃO insere nada no banco — a linha aparecerá automaticamente
       // na tabela "Últimos Envios" via Supabase Realtime.
       const result = await withRequestTimeout(
-        triggerN8nTestWebhook({
+        triggerN8nTestWebhookFn({
           data: {
             accessToken,
             modo: webhookModo,
