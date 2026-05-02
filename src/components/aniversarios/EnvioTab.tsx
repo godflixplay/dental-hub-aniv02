@@ -451,10 +451,6 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       toast.error("Configure sua mensagem na aba Mensagem");
       return;
     }
-    if (webhookDirty) {
-      toast.error("Clique em Salvar para usar o webhook selecionado.");
-      return;
-    }
 
     const mensagemTemplate = config?.mensagem?.trim();
     if (!mensagemTemplate) {
@@ -496,9 +492,12 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         triggerN8nTestWebhook({
           data: {
             accessToken,
+            modo: webhookModo,
             nome,
             telefone: phone,
+            nomeInstancia: instanceName,
             mensagem: finalMessage,
+            imagemUrl: config?.imagem_url ?? null,
           },
         }),
         "O acionamento do webhook de teste",
@@ -579,8 +578,6 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
   }
 
   const hasConfiguredMessage = isMensagemConfigurada(config);
-  const canSend = instanceStatus === "connected" && hasConfiguredMessage;
-
   return (
     <div className="space-y-4">
       {loadError && (
@@ -760,13 +757,11 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
           {(() => {
             const motivoBloqueio = !acessoAtivo
               ? "Assine um plano para liberar."
-              : instanceStatus !== "connected"
-                ? "Conecte o WhatsApp na aba 'WhatsApp' antes de enviar."
+              : !instanceName
+                ? "Conecte uma instância do WhatsApp antes de enviar."
                 : !hasConfiguredMessage
                   ? "Configure sua mensagem na aba 'Mensagem' antes de enviar."
-                  : webhookDirty
-                    ? "Clique em Salvar para usar o webhook selecionado antes de enviar."
-                    : null;
+                  : null;
             return (
               <div className="space-y-2">
                 <Button
