@@ -243,25 +243,25 @@ const STEPS: Step[] = [
   },
   {
     num: 5,
+    key: "envio",
     icon: Send,
     title: "Ative o envio automático",
     intro: "Tudo pronto. Agora é só ligar o sistema e relaxar.",
     detalhe:
-      "Você escolhe o horário em que o sistema vai disparar as mensagens (ex: 8h da manhã). Todo dia, no horário que você escolheu, ele verifica quem faz aniversário e envia a mensagem sozinho. Você pode pausar ou alterar quando quiser.",
+      "Todos os dias, às 9h da manhã, o sistema verifica automaticamente quem faz aniversário e dispara a mensagem sozinho. Você só precisa ativar uma vez — depois disso, é piloto automático. Pode pausar ou desligar quando quiser.",
     comoFazer: [
       "Vá em 'Aniversários' → aba 'Envio'.",
-      "Escolha o horário de envio (recomendamos entre 8h e 10h).",
       "Confira o preview da mensagem que vai sair.",
       "Ative o envio automático.",
       "Acompanhe o histórico de envios na própria tela.",
     ],
-    dica: "Você pode usar o botão 'Enviar Teste' para mandar a mensagem para o seu próprio número antes — assim você confere se está tudo certo.",
+    dica: "Use o botão 'Enviar Teste' para mandar a mensagem para o seu próprio número antes — assim você confere se está tudo certo antes de liberar para os pacientes.",
     mockup: (
       <MockWindow titulo="Aniversários › Envio">
         <div className="space-y-2">
           <div className="flex items-center justify-between rounded border border-border p-2 text-[10px]">
             <span>Horário de envio</span>
-            <span className="font-semibold">08:00</span>
+            <span className="font-semibold">09:00 (fixo)</span>
           </div>
           <div className="flex items-center justify-between rounded border border-border p-2 text-[10px]">
             <span>Envio automático</span>
