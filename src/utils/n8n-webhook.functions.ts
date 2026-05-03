@@ -22,14 +22,10 @@ function resolveWebhookUrl(modo: string | null | undefined): {
 
 const triggerSchema = z.object({
   accessToken: z.string().min(1),
-  // Obrigatórios — conforme contrato definitivo do n8n.
   nome: z.string().min(1).max(200),
   telefone: z.string().min(8).max(20),
   mensagem: z.string().min(1).max(4000),
-  // Opcionais retro-compat — IGNORADOS pelo servidor (resolve via Supabase).
   modo: z.enum(["teste", "producao"]).optional(),
-  nomeInstancia: z.string().max(200).optional(),
-  imagemUrl: z.string().max(2000).nullish(),
 });
 
 const DEFAULT_MENSAGEM = "🎂 Feliz aniversário, {nome}! 🎉";
@@ -69,14 +65,6 @@ function renderMensagem(template: string, nome: string): string {
     .trim();
 }
 
-function sanitizeImagemUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  const trimmed = String(url).trim();
-  if (!trimmed) return null;
-  if (!/^https?:\/\//i.test(trimmed)) return null;
-  return trimmed;
-}
-
 /**
  * Aciona o webhook do n8n responsável pelo envio de teste.
  *
@@ -85,7 +73,7 @@ function sanitizeImagemUrl(url: string | null | undefined): string | null {
  * envie dados defasados/cacheados ao n8n.
  *
  * Payload final enviado ao n8n:
- *   { telefone, nome, nome_instancia, mensagem, imagem_url }
+ *   { nome, telefone, mensagem, nome_instancia, user_id, imagem_url, instancia_id, api_url, token }
  */
 export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
   .inputValidator((input: z.infer<typeof triggerSchema>) =>
@@ -107,47 +95,34 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       .replace(/\/+$/, "")
       .replace(/\/manager$/i, "");
 
-    // 1) Instância (nome + instance_id + imagem espelhada).
+    // 1) Instância (fonte da verdade para nome, id e imagem).
     const { data: instance, error: instanceError } = await supabase
       .from("whatsapp_instances")
-      .select("id, instance_name, instance_id, imagem_url")
+      .select("instance_name, instance_id, imagem_url")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .single();
 
     if (instanceError) {
-      return {
-        success: false as const,
-        error: `Erro ao buscar instância: ${instanceError.message}`,
-      };
+      throw new Error(`Erro ao buscar instância: ${instanceError.message}`);
     }
     if (!instance) {
-      return {
-        success: false as const,
-        error: "Nenhuma instância WhatsApp encontrada para este usuário.",
-      };
+      throw new Error("Nenhuma instância WhatsApp encontrada para este usuário.");
     }
 
-    const nomeInstancia =
-      data.nomeInstancia?.trim() || instance.instance_name?.trim() || "";
+    const nomeInstancia = instance.instance_name?.trim() || "";
     if (!nomeInstancia) {
-      return {
-        success: false as const,
-        error: "Instância sem nome (instance_name) — reconecte o WhatsApp.",
-      };
+      throw new Error("Instância sem nome (instance_name) — reconecte o WhatsApp.");
     }
 
-    // 2) Config da mensagem (mensagem + imagem da mensagem).
+    // 2) Config da mensagem (fonte da verdade para o template salvo).
     const { data: configMensagem, error: configError } = await supabase
       .from("config_mensagem")
-      .select("mensagem, imagem_url")
+      .select("mensagem")
       .eq("user_id", user.id)
       .maybeSingle();
 
     if (configError) {
-      return {
-        success: false as const,
-        error: `Erro ao buscar config_mensagem: ${configError.message}`,
-      };
+      throw new Error(`Erro ao buscar config_mensagem: ${configError.message}`);
     }
 
     // 3) Modo do webhook — prioridade: payload da UI > config_webhook > teste.
