@@ -478,6 +478,13 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
             </p>
           </div>
 
+          {(pendingFile || selectedModelo) && (
+            <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              ⚠ Alterações de imagem não salvas. Clique em <strong>Salvar Configuração</strong> para
+              persistir a imagem no banco antes de disparar o envio de teste.
+            </p>
+          )}
+
           <Button
             onClick={handleSave}
             disabled={saving || !acessoAtivo}
