@@ -237,37 +237,11 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
     }
   };
 
-  // Quando o usuário escolheu um modelo, baixamos a imagem do bucket público
-  // de modelos e re-uploadeamos no bucket próprio do usuário, mantendo a
-  // invariante: whatsapp_instances.imagem_url SEMPRE aponta para
-  // imagens-whatsapp/{userId}/{instance}/imagem.{ext} (consumido pelo n8n).
-  const uploadModeloImage = async (modelo: ModeloMensagem): Promise<string> => {
-    if (!user) throw new Error("Usuário não autenticado");
-    const instanceName = instanceQuery.data?.instance_name;
-    if (!instanceName) {
-      throw new Error(
-        "Conecte uma instância do WhatsApp antes de aplicar o modelo.",
-      );
-    }
-    const resp = await fetch(modelo.imagem_url);
-    if (!resp.ok) throw new Error("Não foi possível baixar a imagem do modelo");
-    const blob = await resp.blob();
-    const ext =
-      (modelo.imagem_url.split(".").pop() || "png")
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "") || "png";
-    const file = new File([blob], `imagem.${ext}`, {
-      type: blob.type || "image/png",
-    });
-    return withRequestTimeout(
-      uploadInstanceImage({
-        userId: user.id,
-        instanceName,
-        file,
-        storage: supabase.storage,
-      }),
-      "A aplicação do modelo",
-    );
+  const getAccessToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+    return token;
   };
 
   const handleSave = async () => {
@@ -278,17 +252,15 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
     }
     setSaving(true);
     try {
-      let nextImagemUrl = imagemUrl;
+      let uploadedUrl: string | null = imagemUrl;
 
+      // Caso 1: upload de arquivo próprio — feito pelo cliente (RLS por folder).
       if (pendingFile) {
-        // Upload de imagem própria
         try {
-          nextImagemUrl = await uploadPendingFile();
+          uploadedUrl = await uploadPendingFile();
+          assertPersistableImageUrl(uploadedUrl, true);
         } catch (uploadErr) {
-          console.error(
-            "[MensagemTab] upload falhou, abortando save",
-            uploadErr,
-          );
+          console.error("[MensagemTab] upload falhou", uploadErr);
           toast.error(
             getAniversariosErrorMessage(uploadErr) ||
               "Falha ao enviar a imagem. Tente novamente.",
@@ -296,103 +268,40 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
           setSaving(false);
           return;
         }
-
-        try {
-          assertPersistableImageUrl(nextImagemUrl, true);
-        } catch {
-          toast.error("Não foi possível obter a URL pública da imagem.");
-          setSaving(false);
-          return;
-        }
-      } else if (selectedModelo) {
-        // Aplicação de modelo: copia imagem do bucket público para o bucket
-        // do usuário, mantendo o n8n apontando para o caminho próprio dele.
-        try {
-          nextImagemUrl = await uploadModeloImage(selectedModelo);
-        } catch (modeloErr) {
-          console.error(
-            "[MensagemTab] aplicação do modelo falhou",
-            modeloErr,
-          );
-          toast.error(
-            getAniversariosErrorMessage(modeloErr) ||
-              "Falha ao aplicar o modelo. Tente novamente.",
-          );
-          setSaving(false);
-          return;
-        }
       }
 
-      const payload = {
-        user_id: user.id,
-        mensagem: mensagem.trim(),
-        imagem_url: nextImagemUrl,
-        updated_at: new Date().toISOString(),
-      };
-      const { error } = await withRequestTimeout(
-        supabase
-          .from("config_mensagem")
-          .upsert(payload, { onConflict: "user_id" })
-          .select("id, mensagem, imagem_url")
-          .single(),
-        "O salvamento da configuração",
-      );
-      if (error) throw error;
+      // Server function é a fonte da verdade: salva config_mensagem +
+      // whatsapp_instances.imagem_url e relê para confirmar.
+      const accessToken = await getAccessToken();
+      const result = await saveMensagemConfigFn({
+        data: {
+          accessToken,
+          mensagem: mensagem.trim(),
+          // Se modelo: server baixa e re-uploada. Se upload próprio: passa URL.
+          imagemUrl: selectedModelo ? null : uploadedUrl,
+          modeloId: selectedModelo?.id ?? null,
+        },
+      });
 
-      // Espelha a imagem pública também em whatsapp_instances.imagem_url
-      // (cada instância carrega a própria URL — consumida pelo n8n).
-      const instanceId = instanceQuery.data?.id;
-      if (!instanceId && nextImagemUrl) {
-        throw new Error(
-          "Instância WhatsApp não encontrada para persistir a imagem.",
-        );
-      }
-      if (instanceId) {
-        const { data: updatedInstance, error: instanceUpdateError } = await withRequestTimeout(
-          supabase
-            .from("whatsapp_instances")
-            .update({ imagem_url: nextImagemUrl })
-            .eq("id", instanceId)
-            .eq("user_id", user.id)
-            .select("imagem_url")
-            .single(),
-          "A atualização da imagem da instância",
-        );
-        if (instanceUpdateError) {
-          throw instanceUpdateError;
-        }
-        if ((updatedInstance?.imagem_url ?? null) !== nextImagemUrl) {
-          throw new Error(
-            "Falha ao confirmar imagem_url na instância do WhatsApp.",
-          );
-        }
-      }
+      console.log("[MensagemTab] save confirmado pelo servidor:", result);
 
-      // Atualiza state local imediatamente (não espera refetch)
-      // para a UI refletir a nova URL sem depender de cache.
-      setImagemUrl(nextImagemUrl);
-
-      // Reseta a flag para forçar re-sync com o novo dado vindo do servidor.
+      setImagemUrl(result.imagemUrl);
       lastSyncedIdRef.current = null;
-      await queryClient.invalidateQueries({
-        queryKey: ["aniv:config:full", userId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["aniv:config", userId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["aniv:wpp:instance", userId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["aniv:instance", userId],
-      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["aniv:config:full", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["aniv:config", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["aniv:wpp:instance", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["aniv:instance", userId] }),
+      ]);
+
       setPendingFile(null);
       setSelectedModelo(null);
       setLocalPreviewUrl((current) => {
         if (current?.startsWith("blob:")) URL.revokeObjectURL(current);
         return null;
       });
-      toast.success("Mensagem salva!");
+      toast.success("Mensagem salva e confirmada no banco!");
     } catch (err) {
       console.error("[MensagemTab] erro ao salvar configuração", err);
       toast.error(getAniversariosErrorMessage(err));
