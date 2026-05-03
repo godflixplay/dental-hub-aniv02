@@ -160,6 +160,21 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
     if (!imagemUrl) {
       throw new Error("imagem_url está vazio - upload não encontrado");
     }
+    // Valida acessibilidade real (sem CORS — request do servidor).
+    try {
+      const head = await fetch(imagemUrl, { method: "HEAD" });
+      console.log("[n8n-webhook] HEAD imagem_url", { imagemUrl, status: head.status });
+      if (!head.ok) {
+        throw new Error(
+          `imagem_url inacessível (HTTP ${head.status}): ${imagemUrl}`,
+        );
+      }
+    } catch (err) {
+      throw new Error(
+        `Falha validando imagem_url: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
 
     // 7) Payload exatamente como o n8n espera (contrato definitivo).
     const payload = {

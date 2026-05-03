@@ -472,10 +472,8 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
     }
     const phone = normalized.phone;
 
-    // Garante que a imagem está realmente persistida ANTES de chamar o webhook.
-    // O n8n consome `whatsapp_instances.imagem_url` — se vazia, o payload chega
-    // sem `media` e a Evolution falha. Recarrega do banco para evitar usar
-    // estado stale do React Query (cache de 30s).
+    // Validação leve: confere se há imagem no banco. A validação real de
+    // acessibilidade é feita pelo servidor em triggerN8nTestWebhook (sem CORS).
     const { data: freshInstance, error: freshErr } = await supabase
       .from("whatsapp_instances")
       .select("imagem_url")
@@ -485,33 +483,14 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       toast.error(`Falha ao verificar imagem da instância: ${freshErr.message}`);
       return;
     }
-    const imagemUrlSalva = freshInstance?.imagem_url ?? null;
-    if (!imagemUrlSalva) {
+    if (!freshInstance?.imagem_url) {
       toast.error(
         "Imagem da mensagem não está salva no banco. Vá na aba Mensagem, selecione uma imagem e clique em Salvar Configuração antes de enviar o teste.",
         { duration: 8000 },
       );
       return;
     }
-    // Verifica se a URL realmente responde — bucket pode ter sido limpo, ou
-    // a URL pode estar quebrada por edge case de upload incompleto.
-    try {
-      const head = await fetch(imagemUrlSalva, { method: "HEAD" });
-      if (!head.ok) {
-        toast.error(
-          `Imagem salva no banco está inacessível (HTTP ${head.status}). Reenvie a imagem na aba Mensagem.`,
-          { duration: 8000 },
-        );
-        return;
-      }
-      console.log("[EnvioTab] imagem_url verificada:", imagemUrlSalva, "→", head.status);
-    } catch (headErr) {
-      toast.error(
-        `Não foi possível validar a imagem (${headErr instanceof Error ? headErr.message : String(headErr)}). Reenvie na aba Mensagem.`,
-        { duration: 8000 },
-      );
-      return;
-    }
+    console.log("[EnvioTab] imagem_url presente no banco:", freshInstance.imagem_url);
 
     setSending(true);
     const finalMessage = buildMensagemPreview(mensagemTemplate, nome);
