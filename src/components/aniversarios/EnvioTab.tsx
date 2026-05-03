@@ -498,6 +498,9 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         20000,
       );
 
+      console.log("[EnvioTab] webhookUrl:", result.webhookUrl);
+      console.log("[EnvioTab] response.status do webhook:", result.status);
+      console.log("[EnvioTab] payload/debug retornado:", result.debugPayload);
       console.log("[EnvioTab] resultado do webhook:", result);
       if (!result.success) {
         toast.error(result.error, {
@@ -509,14 +512,10 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         return;
       }
 
-      const fonte = result.debugPayload?.imagem_fonte ?? "none";
       toast.success(
         `Disparo enviado ao n8n (${result.modo === "producao" ? "Produção" : "Teste"}) para ${nome}.`,
         {
-          description:
-            fonte === "none"
-              ? "Sem imagem no payload."
-              : `Imagem enviada (origem: ${fonte}).`,
+          description: "Payload enviado com imagem_url da instância salva no banco.",
           duration: 6000,
         },
       );
