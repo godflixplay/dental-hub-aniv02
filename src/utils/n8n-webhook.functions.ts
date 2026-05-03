@@ -90,10 +90,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
         "EVOLUTION_API_URL/EVOLUTION_API_KEY ausentes no servidor.",
       );
     }
-    const apiUrl = apiUrlRaw
-      .trim()
-      .replace(/\/+$/, "")
-      .replace(/\/manager$/i, "");
+    const apiUrl = apiUrlRaw.trim();
 
     // 1) Instância (fonte da verdade para nome, id e imagem).
     const { data: instance, error: instanceError } = await supabase
