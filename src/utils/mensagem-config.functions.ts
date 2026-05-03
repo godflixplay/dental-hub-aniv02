@@ -14,6 +14,7 @@ const saveSchema = z.object({
 });
 
 const BUCKET = "imagens-whatsapp";
+const REQUEST_TIMEOUT_MS = 10000;
 
 async function getAuthed(accessToken: string) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -30,6 +31,21 @@ function sanitizeExt(name: string): string {
   const tail = name.split(".").pop() ?? "";
   const cleaned = tail.toLowerCase().replace(/[^a-z0-9]/g, "");
   return cleaned || "png";
+}
+
+async function fetchWithTimeout(input: string, init: RequestInit, label: string) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`${label} demorou mais que ${REQUEST_TIMEOUT_MS / 1000}s.`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
