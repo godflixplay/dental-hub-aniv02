@@ -270,17 +270,63 @@ function AdminUsuarios() {
                         {formatDateBR(profile.created_at)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            profile.whatsapp_status === "connected"
-                              ? "default"
-                              : "outline"
-                          }
-                        >
-                          {profile.whatsapp_status === "connected"
-                            ? "Conectado"
-                            : "Desconectado"}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge
+                            variant={
+                              profile.whatsapp_status === "connected"
+                                ? "default"
+                                : "outline"
+                            }
+                          >
+                            {profile.whatsapp_status === "connected"
+                              ? "Conectado"
+                              : "Desconectado"}
+                          </Badge>
+                          {profile.instance_name && (
+                            <div className="font-mono text-[11px] text-muted-foreground">
+                              {profile.instance_name}
+                            </div>
+                          )}
+                          {profile.owner_number && (
+                            <div className="text-[11px] text-muted-foreground">
+                              📱 {formatPhoneBR(profile.owner_number)}
+                            </div>
+                          )}
+                          {profile.instance_name && (
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Atualizar status"
+                                disabled={refreshMutation.isPending}
+                                onClick={() => refreshMutation.mutate(profile.instance_name!)}
+                              >
+                                <RefreshCw className={`h-3 w-3 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Desconectar"
+                                disabled={logoutMutation.isPending}
+                                onClick={() => logoutMutation.mutate(profile.instance_name!)}
+                              >
+                                <LogOut className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Reconectar / Gerar QR"
+                                disabled={reconnectMutation.isPending}
+                                onClick={() => reconnectMutation.mutate(profile.instance_name!)}
+                              >
+                                <QrCode className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{profile.contatos}</TableCell>
                       <TableCell>
