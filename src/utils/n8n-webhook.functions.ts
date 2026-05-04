@@ -215,12 +215,17 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       imagemFonte: "whatsapp_instances",
     });
 
+    console.log("ANTES DO FETCH", webhookUrl, { ...payload, token: "***" });
+
     try {
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      console.log("DEPOIS DO FETCH");
+      console.log("STATUS:", res.status);
 
       const text = await res.text();
 
