@@ -258,6 +258,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      console.error("ERRO FETCH:", err);
       console.error("[n8n-webhook] falha de rede", { modo: webhookModo, message });
       return {
         success: false as const,
