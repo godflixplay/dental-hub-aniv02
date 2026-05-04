@@ -214,6 +214,8 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
   };
 
 
+  console.log("[MensagemTab] render - pendingFile atual:", pendingFile?.name ?? null, "selectedModelo:", selectedModelo?.id ?? null, "imagemUrl:", imagemUrl);
+
   const handleSave = async () => {
     // ===== VALIDAÇÕES OBRIGATÓRIAS =====
     if (!user?.id) {
