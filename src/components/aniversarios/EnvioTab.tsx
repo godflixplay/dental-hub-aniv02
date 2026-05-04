@@ -465,12 +465,14 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
     const nome = contato?.nome || customNome || "paciente";
 
     if (!rawPhone) {
+      console.warn("[EnvioTab] ABORT: sem telefone (selectedContato/customPhone vazios)");
       toast.error("Selecione um contato ou digite um número");
       return;
     }
 
     const normalized = normalizePhoneBR(rawPhone);
     if (!normalized.valid) {
+      console.warn("[EnvioTab] ABORT: telefone inválido", { rawPhone, reason: normalized.reason });
       toast.error(
         normalized.reason ??
           "Número inválido. Use formato 55DDXXXXXXXXX (ex: 5521981089100).",
@@ -487,10 +489,12 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       .eq("user_id", user.id)
       .maybeSingle();
     if (freshErr) {
+      console.warn("[EnvioTab] ABORT: erro ao buscar instância", freshErr);
       toast.error(`Falha ao verificar imagem da instância: ${freshErr.message}`);
       return;
     }
     if (!freshInstance?.imagem_url) {
+      console.warn("[EnvioTab] ABORT: imagem_url ausente no banco");
       toast.error(
         "Imagem da mensagem não está salva no banco. Vá na aba Mensagem, selecione uma imagem e clique em Salvar Configuração antes de enviar o teste.",
         { duration: 8000 },
@@ -498,6 +502,7 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
       return;
     }
     console.log("[EnvioTab] imagem_url presente no banco:", freshInstance.imagem_url);
+    console.log("[EnvioTab] PRESTES A DISPARAR webhook via server function...");
 
     setSending(true);
     const finalMessage = buildMensagemPreview(mensagemTemplate, nome);
