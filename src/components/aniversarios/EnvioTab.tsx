@@ -848,24 +848,29 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={diagRunning}
                     onClick={async () => {
+                      setDiagRunning(true);
                       const tid = toast.loading("Diagnosticando rede...");
                       try {
                         const res = await diagnoseNetwork();
                         console.log("[net-diag] resultado:", res);
                         console.table(res.results);
+                        setDiagResults(res.results as DiagResult[]);
                         const fails = res.results.filter((r) => !r.ok);
                         toast.success(
-                          `Diagnóstico concluído: ${res.results.length - fails.length}/${res.results.length} OK. Veja o console.`,
+                          `Diagnóstico: ${res.results.length - fails.length}/${res.results.length} OK.`,
                           { id: tid },
                         );
                       } catch (e) {
                         console.error("[net-diag] erro", e);
                         toast.error(`Falha no diagnóstico: ${e instanceof Error ? e.message : String(e)}`, { id: tid });
+                      } finally {
+                        setDiagRunning(false);
                       }
                     }}
                   >
-                    Diagnosticar rede
+                    {diagRunning ? "Diagnosticando..." : "Diagnosticar rede"}
                   </Button>
                 </div>
                 {motivoBloqueio && (
