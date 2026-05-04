@@ -270,17 +270,63 @@ function AdminUsuarios() {
                         {formatDateBR(profile.created_at)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            profile.whatsapp_status === "connected"
-                              ? "default"
-                              : "outline"
-                          }
-                        >
-                          {profile.whatsapp_status === "connected"
-                            ? "Conectado"
-                            : "Desconectado"}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge
+                            variant={
+                              profile.whatsapp_status === "connected"
+                                ? "default"
+                                : "outline"
+                            }
+                          >
+                            {profile.whatsapp_status === "connected"
+                              ? "Conectado"
+                              : "Desconectado"}
+                          </Badge>
+                          {profile.instance_name && (
+                            <div className="font-mono text-[11px] text-muted-foreground">
+                              {profile.instance_name}
+                            </div>
+                          )}
+                          {profile.owner_number && (
+                            <div className="text-[11px] text-muted-foreground">
+                              📱 {formatPhoneBR(profile.owner_number)}
+                            </div>
+                          )}
+                          {profile.instance_name && (
+                            <div className="flex flex-wrap gap-1 pt-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Atualizar status"
+                                disabled={refreshMutation.isPending}
+                                onClick={() => refreshMutation.mutate(profile.instance_name!)}
+                              >
+                                <RefreshCw className={`h-3 w-3 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Desconectar"
+                                disabled={logoutMutation.isPending}
+                                onClick={() => logoutMutation.mutate(profile.instance_name!)}
+                              >
+                                <LogOut className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                title="Reconectar / Gerar QR"
+                                disabled={reconnectMutation.isPending}
+                                onClick={() => reconnectMutation.mutate(profile.instance_name!)}
+                              >
+                                <QrCode className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{profile.contatos}</TableCell>
                       <TableCell>
@@ -442,6 +488,38 @@ function AdminUsuarios() {
                 </div>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!qrDialog} onOpenChange={() => setQrDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5" />
+              Reconectar instância
+            </DialogTitle>
+            <DialogDescription>
+              {qrDialog?.instance} — HTTP {qrDialog?.status}
+            </DialogDescription>
+          </DialogHeader>
+          {qrDialog?.qr ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="rounded-lg border bg-white p-3">
+                <img
+                  src={qrDialog.qr.startsWith("data:") ? qrDialog.qr : `data:image/png;base64,${qrDialog.qr}`}
+                  alt="QR Code"
+                  className="h-64 w-64"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Peça ao cliente que escaneie o QR no WhatsApp.
+              </p>
+            </div>
+          ) : (
+            <pre className="max-h-64 overflow-auto rounded bg-muted p-3 text-xs">
+              {qrDialog?.body || "Sem QR retornado pela Evolution."}
+            </pre>
           )}
         </DialogContent>
       </Dialog>
