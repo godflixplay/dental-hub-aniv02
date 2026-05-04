@@ -261,7 +261,12 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
         bodySnippet: responseText.slice(0, 200),
       });
     } catch (error) {
-      errorMsg = error instanceof Error ? error.message : String(error);
+      const isAbort = error instanceof Error && error.name === "AbortError";
+      errorMsg = isAbort
+        ? `Timeout (10s) chamando o webhook n8n (${webhookModo}). O servidor não respondeu a tempo.`
+        : error instanceof Error
+          ? error.message
+          : String(error);
       console.error("ERRO NO FETCH:", error);
       console.error("[n8n-webhook] falha de rede", {
         modo: webhookModo,
