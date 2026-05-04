@@ -616,8 +616,21 @@ export const adminReconnectInstance = createServerFn({ method: "POST" })
     const res = await fetch(url, { headers: { apikey: apiKey } });
     const text = await res.text();
     console.log("[admin] reconnect ←", res.status, text.slice(0, 200));
-    let bodyJson: Record<string, unknown> | null = null;
-    try { bodyJson = JSON.parse(text) as Record<string, unknown>; } catch { /* keep null */ }
-    return { ok: res.ok, status: res.status, body: text.slice(0, 1000), bodyJson };
+    let qrBase64: string | null = null;
+    let state: string | null = null;
+    try {
+      const j = JSON.parse(text) as {
+        base64?: string;
+        qrcode?: { base64?: string; code?: string } | string;
+        instance?: { state?: string };
+        state?: string;
+      };
+      qrBase64 =
+        j.base64 ??
+        (typeof j.qrcode === "object" ? j.qrcode?.base64 ?? null : null) ??
+        null;
+      state = j.instance?.state ?? j.state ?? null;
+    } catch { /* keep nulls */ }
+    return { ok: res.ok, status: res.status, body: text.slice(0, 500), qrBase64, state };
   });
 
