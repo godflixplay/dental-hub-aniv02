@@ -215,12 +215,17 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       imagemFonte: "whatsapp_instances",
     });
 
+    console.log("ANTES DO FETCH", webhookUrl, { ...payload, token: "***" });
+
     try {
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
+      console.log("DEPOIS DO FETCH");
+      console.log("STATUS:", res.status);
 
       const text = await res.text();
 
@@ -253,6 +258,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      console.error("ERRO FETCH:", err);
       console.error("[n8n-webhook] falha de rede", { modo: webhookModo, message });
       return {
         success: false as const,
