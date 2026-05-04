@@ -27,7 +27,7 @@ interface ConfigMensagem {
 export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const saveMensagemConfigFn = useServerFn(saveMensagemConfig);
+  
   const userId = user?.id;
   const fileRef = useRef<HTMLInputElement>(null);
   const [mensagem, setMensagem] = useState(DEFAULT_MENSAGEM_ANIVERSARIO);
