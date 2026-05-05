@@ -118,6 +118,30 @@ export const Route = createFileRoute("/api/public/asaas-webhook")({
               .update({ status: novoStatus })
               .eq("id", assinaturaId);
           }
+
+          // Push para admins quando pagamento ativa a assinatura
+          if (novoStatus === "ativa") {
+            try {
+              const { sendPushToAdmins } = await import("@/utils/push.server");
+              let email = "";
+              if (userId) {
+                const { data: prof } = await supabase
+                  .from("profiles")
+                  .select("email")
+                  .eq("id", userId)
+                  .maybeSingle();
+                email = (prof?.email as string) ?? "";
+              }
+              await sendPushToAdmins({
+                title: "Nova assinatura ativa",
+                body: `${email || userId} · R$ ${Number(p.value ?? 0).toFixed(2)}`,
+                url: "/admin/financeiro",
+                tipo: "sucesso",
+              });
+            } catch (e) {
+              console.warn("[push] asaas notify falhou", e);
+            }
+          }
         }
 
         // 4) Eventos de assinatura

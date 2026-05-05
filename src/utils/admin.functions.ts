@@ -529,6 +529,14 @@ export const adminRefreshInstanceStatus = createServerFn({ method: "POST" })
     }
 
     const admin = getSupabaseAdmin();
+    // Lê status anterior para detectar transição "connected → outro" e disparar push admin.
+    const { data: prevRow } = await admin
+      .from("whatsapp_instances")
+      .select("status, user_id")
+      .eq("instance_name", data.instanceName)
+      .maybeSingle();
+    const prevStatus = (prevRow?.status as string | null) ?? null;
+
     const updatePayload: Record<string, unknown> = {
       status: novoStatus,
       updated_at: new Date().toISOString(),
@@ -545,6 +553,29 @@ export const adminRefreshInstanceStatus = createServerFn({ method: "POST" })
         .from("whatsapp_instances")
         .update(updatePayload)
         .eq("instance_name", data.instanceName);
+    }
+
+    if (prevStatus === "connected" && novoStatus !== "connected") {
+      try {
+        const { sendPushToAdmins } = await import("./push.server");
+        let userEmail = "";
+        if (prevRow?.user_id) {
+          const { data: prof } = await admin
+            .from("profiles")
+            .select("email")
+            .eq("id", prevRow.user_id as string)
+            .maybeSingle();
+          userEmail = (prof?.email as string) ?? "";
+        }
+        await sendPushToAdmins({
+          title: "Instância desconectada",
+          body: `${userEmail || "Usuário"} · ${data.instanceName}`,
+          url: "/admin/usuarios",
+          tipo: "aviso",
+        });
+      } catch (e) {
+        console.warn("[push] disconnect notify falhou", e);
+      }
     }
 
     return { instance_name: data.instanceName, status: novoStatus, owner_number: ownerNumber };
