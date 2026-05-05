@@ -575,6 +575,78 @@ export const adminToggleCortesia = createServerFn({ method: "POST" })
   });
 
 // ============================================================
+// adminLogsAgrupados — lê a view logs_agrupados (service role)
+// e enriquece com email/nome do responsável + owner_number da instância.
+// ============================================================
+export const adminLogsAgrupados = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      accessToken: z.string().min(1),
+      dataInicio: z.string().min(1),
+      dataFim: z.string().min(1),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin(data.accessToken);
+    const admin = getSupabaseAdmin();
+
+    const { data: rows, error } = await admin
+      .from("logs_agrupados")
+      .select("*")
+      .gte("data", data.dataInicio)
+      .lte("data", data.dataFim)
+      .limit(1000);
+    if (error) throw new Error(error.message);
+
+    const userIds = Array.from(
+      new Set((rows ?? []).map((r) => r.user_id).filter(Boolean) as string[]),
+    );
+    const instanceNames = Array.from(
+      new Set(
+        (rows ?? []).map((r) => r.nome_instancia).filter(Boolean) as string[],
+      ),
+    );
+
+    const [profsRes, instRes] = await Promise.all([
+      userIds.length
+        ? admin
+            .from("profiles")
+            .select("id, email, nome_responsavel")
+            .in("id", userIds)
+        : Promise.resolve({ data: [] as Array<{ id: string; email: string | null; nome_responsavel: string | null }>, error: null }),
+      instanceNames.length
+        ? admin
+            .from("whatsapp_instances")
+            .select("instance_name, owner_number, user_id")
+            .in("instance_name", instanceNames)
+        : Promise.resolve({ data: [] as Array<{ instance_name: string; owner_number: string | null; user_id: string }>, error: null }),
+    ]);
+
+    const profMap = new Map<string, { email: string | null; nome_responsavel: string | null }>();
+    for (const p of profsRes.data ?? []) {
+      profMap.set(p.id, { email: p.email ?? null, nome_responsavel: p.nome_responsavel ?? null });
+    }
+    const ownerMap = new Map<string, string | null>();
+    for (const i of instRes.data ?? []) {
+      ownerMap.set(i.instance_name, i.owner_number ?? null);
+    }
+
+    return {
+      rows: (rows ?? []).map((r) => ({
+        user_id: r.user_id ?? null,
+        instancia: r.nome_instancia ?? null,
+        owner_number: r.nome_instancia ? (ownerMap.get(r.nome_instancia) ?? null) : null,
+        email: r.user_id ? (profMap.get(r.user_id)?.email ?? null) : null,
+        nome_responsavel: r.user_id ? (profMap.get(r.user_id)?.nome_responsavel ?? null) : null,
+        data: r.data,
+        total: r.total ?? 0,
+        enviados: r.enviados ?? 0,
+        erros: r.erros ?? 0,
+      })),
+    };
+  });
+
+// ============================================================
 // adminLogoutInstance — desconecta a instância na Evolution API,
 // SEM apagar o registro no banco. O instance_name continua igual
 // e pode ser reconectado depois.
