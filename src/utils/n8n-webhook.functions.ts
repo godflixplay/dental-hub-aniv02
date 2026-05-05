@@ -233,20 +233,29 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
     let errorMsg: string | null = null;
     let responseText = "";
 
+    const controller = new AbortController();
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const forcedTimeout = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Timeout forçado (5s) chamando ${webhookUrl}`));
+      }, 5000);
+    });
+
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-
       console.log("ANTES DO FETCH");
+      console.log("URL CHAMADA:", webhookUrl);
+      console.log("PAYLOAD ENVIADO:", { ...payload, token: "***" });
 
-      response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
+      response = await Promise.race([
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        }),
+        forcedTimeout,
+      ]);
 
       console.log("DEPOIS DO FETCH");
       console.log("STATUS:", response.status);
@@ -263,15 +272,20 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
     } catch (error) {
       const isAbort = error instanceof Error && error.name === "AbortError";
       errorMsg = isAbort
-        ? `Timeout (10s) chamando o webhook n8n (${webhookModo}). O servidor não respondeu a tempo.`
+        ? `Timeout forçado (5s) chamando o webhook n8n (${webhookModo}). O servidor não respondeu a tempo.`
         : error instanceof Error
           ? error.message
           : String(error);
       console.error("ERRO NO FETCH:", error);
+      if (error instanceof Error && error.stack) {
+        console.error("STACK FETCH:", error.stack);
+      }
       console.error("[n8n-webhook] falha de rede", {
         modo: webhookModo,
         message: errorMsg,
       });
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
 
     return {
@@ -285,6 +299,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
         erro: errorMsg,
       },
       response: responseText.slice(0, 1000),
+      body: responseText.slice(0, 1000),
       modo: webhookModo,
       debugPayload,
     };
