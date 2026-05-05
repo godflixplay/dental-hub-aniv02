@@ -292,7 +292,7 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
         (payload) => {
           console.log("[EnvioTab] Realtime chegou (UPDATE):", payload);
           const atualizado = mapRow(payload.new as Record<string, unknown>);
-          queryClient.setQueryData<Envio[]>(queryKey, (prev = []) =>
+          queryClient.setQueryData<Envio[]>([...queryKey, range.from, range.to], (prev = []) =>
             prev.map((e) => (e.id === atualizado.id ? atualizado : e)),
           );
           void queryClient.invalidateQueries({ queryKey });
