@@ -137,5 +137,5 @@ export const enviarComunicado = createServerFn({ method: "POST" })
       url: data.link || "/dashboard/comunicados",
       tipo: "info",
     });
-    return { ok: true, usuarios: userIds.length, ...result };
+    return { ...result, ok: true, usuarios: userIds.length };
   });
