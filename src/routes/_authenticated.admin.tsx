@@ -25,9 +25,9 @@ function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden">
         <AdminSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 items-center justify-between border-b bg-card px-3 sm:px-4">
             <div className="flex items-center min-w-0">
               <SidebarTrigger />
@@ -37,7 +37,7 @@ function AdminLayout() {
             </div>
             <NotificationBell />
           </header>
-          <main className="flex-1 p-4 sm:p-6">
+          <main className="min-w-0 flex-1 overflow-x-hidden p-3 sm:p-6">
             <Outlet />
           </main>
         </div>
