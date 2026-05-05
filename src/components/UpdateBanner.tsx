@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-const UPDATE_VERSION = "2026-05-05-01";
+const UPDATE_VERSION = "2026-05-05-02";
 const UPDATE_TIME = "05/05/2026";
 const STORAGE_KEY = "dh_update_dismissed";
 
