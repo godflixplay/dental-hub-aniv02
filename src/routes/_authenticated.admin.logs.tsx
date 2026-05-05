@@ -4,6 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import { adminLogsAgrupados } from "@/utils/admin.functions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function formatPhoneBR(raw: string | null | undefined): string {
   if (!raw) return "—";
@@ -57,7 +64,7 @@ export const Route = createFileRoute("/_authenticated/admin/logs")({
   component: AdminLogs,
 });
 
-type FiltroPeriodo = "hoje" | "7d" | "30d" | "mes" | "personalizado";
+type FiltroPeriodo = "mes" | "ano" | "personalizado";
 
 type LogRow = {
   user_id: string | null;
@@ -71,40 +78,37 @@ type LogRow = {
   erros: number | null;
 };
 
-function getRange(periodo: FiltroPeriodo, custom?: { from?: Date; to?: Date }) {
-  const now = new Date();
-  const fim = new Date(now);
-  fim.setHours(23, 59, 59, 999);
-  const inicio = new Date(now);
-
-  switch (periodo) {
-    case "hoje":
-      inicio.setHours(0, 0, 0, 0);
-      break;
-    case "7d":
-      inicio.setDate(now.getDate() - 7);
-      inicio.setHours(0, 0, 0, 0);
-      break;
-    case "30d":
-      inicio.setDate(now.getDate() - 30);
-      inicio.setHours(0, 0, 0, 0);
-      break;
-    case "mes":
-      inicio.setDate(1);
-      inicio.setHours(0, 0, 0, 0);
-      break;
-    case "personalizado": {
-      const from = custom?.from ?? new Date(now.getFullYear(), now.getMonth(), 1);
-      const to = custom?.to ?? now;
-      const i = new Date(from);
-      i.setHours(0, 0, 0, 0);
-      const f = new Date(to);
-      f.setHours(23, 59, 59, 999);
-      return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
-    }
+function getRange(
+  periodo: FiltroPeriodo,
+  mes: number,
+  ano: number,
+  custom?: { from?: Date; to?: Date },
+) {
+  if (periodo === "personalizado") {
+    const now = new Date();
+    const from = custom?.from ?? new Date(now.getFullYear(), now.getMonth(), 1);
+    const to = custom?.to ?? now;
+    const i = new Date(from);
+    i.setHours(0, 0, 0, 0);
+    const f = new Date(to);
+    f.setHours(23, 59, 59, 999);
+    return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
   }
-  return { dataInicio: inicio.toISOString(), dataFim: fim.toISOString() };
+  if (periodo === "ano") {
+    const i = new Date(ano, 0, 1, 0, 0, 0, 0);
+    const f = new Date(ano, 11, 31, 23, 59, 59, 999);
+    return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
+  }
+  // mes
+  const i = new Date(ano, mes, 1, 0, 0, 0, 0);
+  const f = new Date(ano, mes + 1, 0, 23, 59, 59, 999);
+  return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
 }
+
+const MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
 
 type GrupoUsuario = {
   user_id: string;
