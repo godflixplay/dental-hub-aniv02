@@ -64,7 +64,7 @@ export const Route = createFileRoute("/_authenticated/admin/logs")({
   component: AdminLogs,
 });
 
-type FiltroPeriodo = "mes" | "ano" | "personalizado";
+type FiltroPeriodo = "7d" | "30d" | "personalizado";
 
 type LogRow = {
   user_id: string | null;
@@ -80,35 +80,21 @@ type LogRow = {
 
 function getRange(
   periodo: FiltroPeriodo,
-  mes: number,
-  ano: number,
   custom?: { from?: Date; to?: Date },
 ) {
+  const now = new Date();
   if (periodo === "personalizado") {
-    const now = new Date();
     const from = custom?.from ?? new Date(now.getFullYear(), now.getMonth(), 1);
     const to = custom?.to ?? now;
-    const i = new Date(from);
-    i.setHours(0, 0, 0, 0);
-    const f = new Date(to);
-    f.setHours(23, 59, 59, 999);
+    const i = new Date(from); i.setHours(0, 0, 0, 0);
+    const f = new Date(to); f.setHours(23, 59, 59, 999);
     return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
   }
-  if (periodo === "ano") {
-    const i = new Date(ano, 0, 1, 0, 0, 0, 0);
-    const f = new Date(ano, 11, 31, 23, 59, 59, 999);
-    return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
-  }
-  // mes
-  const i = new Date(ano, mes, 1, 0, 0, 0, 0);
-  const f = new Date(ano, mes + 1, 0, 23, 59, 59, 999);
+  const days = periodo === "7d" ? 7 : 30;
+  const i = new Date(now); i.setDate(i.getDate() - days); i.setHours(0, 0, 0, 0);
+  const f = new Date(now); f.setHours(23, 59, 59, 999);
   return { dataInicio: i.toISOString(), dataFim: f.toISOString() };
 }
-
-const MESES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
 
 type GrupoUsuario = {
   user_id: string;
