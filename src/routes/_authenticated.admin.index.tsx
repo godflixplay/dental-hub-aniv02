@@ -41,6 +41,7 @@ import {
 } from "@/utils/admin.functions";
 import { formatDateTimeBR } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
+import { PushSubscribeCard } from "@/components/admin/PushSubscribeCard";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
