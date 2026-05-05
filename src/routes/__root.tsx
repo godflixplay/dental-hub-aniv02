@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/use-auth";
+import { UpdateBanner } from "@/components/UpdateBanner";
 import appCss from "../styles.css?url";
 
 const FB_PIXEL_ID = "1873464756626259";
@@ -100,6 +101,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <UpdateBanner />
       </AuthProvider>
     </QueryClientProvider>
   );
