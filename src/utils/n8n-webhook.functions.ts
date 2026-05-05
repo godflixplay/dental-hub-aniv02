@@ -234,7 +234,13 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
     let responseText = "";
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const forcedTimeout = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Timeout forçado (5s) chamando ${webhookUrl}`));
+      }, 5000);
+    });
 
     try {
       console.log("ANTES DO FETCH");
@@ -248,12 +254,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
           body: JSON.stringify(payload),
           signal: controller.signal,
         }),
-        new Promise<never>((_, reject) => {
-          setTimeout(() => {
-            controller.abort();
-            reject(new Error(`Timeout forçado (5s) chamando ${webhookUrl}`));
-          }, 5000);
-        }),
+        forcedTimeout,
       ]);
 
       console.log("DEPOIS DO FETCH");
@@ -284,7 +285,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
         message: errorMsg,
       });
     } finally {
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
     }
 
     return {
@@ -298,6 +299,7 @@ export const triggerN8nTestWebhook = createServerFn({ method: "POST" })
         erro: errorMsg,
       },
       response: responseText.slice(0, 1000),
+      body: responseText.slice(0, 1000),
       modo: webhookModo,
       debugPayload,
     };
