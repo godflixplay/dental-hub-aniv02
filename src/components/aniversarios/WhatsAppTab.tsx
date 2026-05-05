@@ -51,8 +51,8 @@ type StepKey = "create" | "save" | "qr" | "scan" | "connected";
 type StepState = "pending" | "active" | "done" | "error";
 
 const STEP_LABELS: Record<StepKey, string> = {
-  create: "Criando instância na Evolution API",
-  save: "Registrando instância no banco de dados",
+  create: "Criando sua conexão com o WhatsApp",
+  save: "Registrando sua conexão",
   qr: "Gerando QR Code",
   scan: "Aguardando leitura do QR Code no celular",
   connected: "WhatsApp conectado",
@@ -533,19 +533,24 @@ export function WhatsAppTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
   };
 
   const StepperCard = () => {
+    const isConnected = instance?.status === "connected";
     const anyActivity = Object.values(steps).some((s) => s !== "pending");
-    if (!anyActivity && !connecting) return null;
+    if (!anyActivity && !connecting && !isConnected) return null;
+    const effectiveSteps: Record<StepKey, StepState> = isConnected
+      ? { create: "done", save: "done", qr: "done", scan: "done", connected: "done" }
+      : steps;
     return (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Progresso da conexão</CardTitle>
           <CardDescription>
-            Acompanhe cada etapa do fluxo abaixo.
+            Acompanhe cada etapa do fluxo abaixo. Tudo verde significa que sua
+            conexão com o WhatsApp está pronta para enviar mensagens.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {STEP_ORDER.map((key, idx) => {
-            const state = steps[key];
+            const state = effectiveSteps[key];
             const Icon =
               state === "done"
                 ? CheckCircle2
@@ -666,9 +671,13 @@ export function WhatsAppTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
                 <WifiOff className="h-5 w-5 text-destructive" />
               )}
               <div>
-                <CardTitle className="text-lg">Sua instância</CardTitle>
-                <CardDescription className="font-mono text-xs">
-                  {instance.instance_name}
+                <CardTitle className="text-lg">Sua conexão do WhatsApp</CardTitle>
+                <CardDescription className="text-xs">
+                  Esta é a sua conexão exclusiva, usada para enviar as
+                  mensagens automáticas para seus contatos.
+                </CardDescription>
+                <CardDescription className="font-mono text-[11px] opacity-70">
+                  ID: {instance.instance_name}
                 </CardDescription>
               </div>
             </div>
@@ -702,18 +711,6 @@ export function WhatsAppTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
               className={`mr-1 h-4 w-4 ${checking ? "animate-spin" : ""}`}
             />
             Atualizar Status
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleConfigureWebhook}
-            disabled={configuringWebhook}
-            title="Registra o webhook de status na Evolution API para esta instância"
-          >
-            <RefreshCw
-              className={`mr-1 h-4 w-4 ${configuringWebhook ? "animate-spin" : ""}`}
-            />
-            {configuringWebhook ? "Configurando..." : "Configurar Webhook"}
           </Button>
         </CardContent>
       </Card>
