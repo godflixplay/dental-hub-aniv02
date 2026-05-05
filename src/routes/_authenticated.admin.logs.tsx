@@ -192,10 +192,22 @@ function AdminLogs() {
   const isMobile = useIsMobile();
   const { session } = useAuth();
   const accessToken = session?.access_token ?? "";
-  const [periodo, setPeriodo] = useState<FiltroPeriodo>("7d");
+  const now = new Date();
+  const [periodo, setPeriodo] = useState<FiltroPeriodo>("mes");
+  const [mes, setMes] = useState<number>(now.getMonth());
+  const [ano, setAno] = useState<number>(now.getFullYear());
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const [pageSize, setPageSize] = useState<number>(10);
 
-  const range = useMemo(() => getRange(periodo, customRange), [periodo, customRange]);
+  const range = useMemo(
+    () => getRange(periodo, mes, ano, customRange),
+    [periodo, mes, ano, customRange],
+  );
+
+  const anosDisponiveis = useMemo(() => {
+    const atual = now.getFullYear();
+    return [atual - 2, atual - 1, atual, atual + 1];
+  }, [now]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin-logs-agrupados", range.dataInicio, range.dataFim, accessToken],
@@ -223,9 +235,13 @@ function AdminLogs() {
     return m;
   }, [rows]);
 
-  const grupos = useMemo(
+  const gruposCompletos = useMemo(
     () => agrupar(rows, ownerNumberByInstance),
     [rows, ownerNumberByInstance],
+  );
+  const grupos = useMemo(
+    () => gruposCompletos.slice(0, pageSize),
+    [gruposCompletos, pageSize],
   );
   const totalGeral = rows.reduce((s, r) => s + (r.total ?? 0), 0);
   const totalEnviados = rows.reduce((s, r) => s + (r.enviados ?? 0), 0);
@@ -243,17 +259,11 @@ function AdminLogs() {
       {/* Filtros de período */}
       <Card>
         <CardContent className="flex flex-wrap items-center gap-2 p-4">
-          <Button variant={periodo === "hoje" ? "default" : "outline"} size="sm" onClick={() => setPeriodo("hoje")}>
-            Hoje
-          </Button>
-          <Button variant={periodo === "7d" ? "default" : "outline"} size="sm" onClick={() => setPeriodo("7d")}>
-            Últimos 7 dias
-          </Button>
-          <Button variant={periodo === "30d" ? "default" : "outline"} size="sm" onClick={() => setPeriodo("30d")}>
-            Últimos 30 dias
-          </Button>
           <Button variant={periodo === "mes" ? "default" : "outline"} size="sm" onClick={() => setPeriodo("mes")}>
-            Este mês
+            Mês
+          </Button>
+          <Button variant={periodo === "ano" ? "default" : "outline"} size="sm" onClick={() => setPeriodo("ano")}>
+            Ano
           </Button>
           <Popover>
             <PopoverTrigger asChild>
@@ -281,8 +291,43 @@ function AdminLogs() {
               />
             </PopoverContent>
           </Popover>
-          <span className="ml-auto text-xs text-muted-foreground">
-            {formatDateBR(range.dataInicio)} → {formatDateBR(range.dataFim)}
+
+          {periodo === "mes" && (
+            <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
+              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MESES.map((m, i) => (
+                  <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {(periodo === "mes" || periodo === "ano") && (
+            <Select value={String(ano)} onValueChange={(v) => setAno(Number(v))}>
+              <SelectTrigger className="h-9 w-[100px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {anosDisponiveis.map((a) => (
+                  <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Mostrar</span>
+            <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+              <SelectTrigger className="h-9 w-[80px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+        <CardContent className="px-4 pb-3 pt-0">
+          <span className="text-xs text-muted-foreground">
+            {formatDateBR(range.dataInicio)} → {formatDateBR(range.dataFim)} · Exibindo {grupos.length} de {gruposCompletos.length} usuário(s)
           </span>
         </CardContent>
       </Card>
