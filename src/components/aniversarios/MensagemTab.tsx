@@ -431,6 +431,7 @@ export function MensagemTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = 
               value={mensagem}
               onChange={(e) => setMensagem(e.target.value)}
               placeholder="Digite sua mensagem..."
+              className="w-full max-w-full resize-y"
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Use <code className="rounded bg-muted px-1">{"{nome}"}</code> para inserir o nome do
