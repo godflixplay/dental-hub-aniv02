@@ -104,7 +104,7 @@ export async function sendPushToAdmins(payload: PushPayload) {
     .eq("role", "admin");
   if (adminsErr) {
     console.error("[push] erro buscando admins", adminsErr);
-    return { ok: false, error: adminsErr.message };
+    return { ok: false, error: adminsErr.message, sent: 0, total: 0, inApp: 0 };
   }
   const adminIds = (admins ?? []).map((a) => a.id as string);
   return sendPushToUserIds(adminIds, { ...payload, url: payload.url ?? "/admin/notificacoes" }, "admin");
