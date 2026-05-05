@@ -28,7 +28,7 @@ type Notificacao = {
 const tipoStyle: Record<Notificacao["tipo"], string> = {
   info: "bg-primary/10 text-primary",
   sucesso: "bg-accent/10 text-accent",
-  aviso: "bg-amber-500/10 text-amber-600",
+  aviso: "bg-secondary text-secondary-foreground",
   erro: "bg-destructive/10 text-destructive",
 };
 
