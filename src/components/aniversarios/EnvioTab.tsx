@@ -91,6 +91,10 @@ export function EnvioTab({ acessoAtivo = true }: { acessoAtivo?: boolean } = {})
 
   const [instanceStatus, setInstanceStatus] = useState<string>("disconnected");
   const [ownerNumber, setOwnerNumber] = useState<string | null>(null);
+  const [filtroEnvio, setFiltroEnvio] = useState<FiltroEnvio>("7d");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const isMobile = useIsMobile();
+  const range = getEnvioRange(filtroEnvio, customRange);
 
   const getAccessToken = useCallback(async () => {
     const {
