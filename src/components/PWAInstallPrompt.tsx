@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, Share, Smartphone, X } from "lucide-react";
+import { Download, Share, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -90,14 +90,6 @@ export function PWAInstallPrompt() {
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : dismiss(false))}>
       <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-lg p-5 sm:p-6">
-        <button
-          type="button"
-          onClick={() => dismiss(false)}
-          className="absolute right-4 top-4 rounded-sm text-muted-foreground transition hover:text-foreground"
-          aria-label="Fechar"
-        >
-          <X className="h-4 w-4" />
-        </button>
         <DialogHeader className="pr-5 text-left">
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
             <img src="/pwa-icon-192.png" alt="Dental Hub" className="h-9 w-9 rounded-md" />
