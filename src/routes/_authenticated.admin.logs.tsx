@@ -185,52 +185,38 @@ function agrupar(
 
 function AdminLogs() {
   const isMobile = useIsMobile();
+  const { session } = useAuth();
+  const accessToken = session?.access_token ?? "";
   const [periodo, setPeriodo] = useState<FiltroPeriodo>("7d");
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
 
   const range = useMemo(() => getRange(periodo, customRange), [periodo, customRange]);
 
-  const { data: rows = [], isLoading, error } = useQuery({
-    queryKey: ["logs-agrupados", range.dataInicio, range.dataFim],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-logs-agrupados", range.dataInicio, range.dataFim, accessToken],
+    enabled: !!accessToken,
     queryFn: async () => {
-      console.log("ADMIN LOGS START", range);
-      const t0 = performance.now();
-      const { data, error } = await supabase
-        .from("logs_agrupados")
-        .select("*")
-        .gte("data", range.dataInicio)
-        .lte("data", range.dataFim)
-        .limit(200);
-      console.log("ADMIN LOGS DONE", Math.round(performance.now() - t0), "ms");
-      console.log("TOTAL REGISTROS:", data?.length);
-      if (error) throw error;
-      return (data ?? []) as LogRow[];
+      const res = await adminLogsAgrupados({
+        data: {
+          accessToken,
+          dataInicio: range.dataInicio,
+          dataFim: range.dataFim,
+        },
+      });
+      return res;
     },
     staleTime: 30_000,
   });
 
-  // Busca owner_number (número conectado) de cada instância para mostrar
-  // junto do nome no painel de logs.
-  const { data: instancias = [] } = useQuery({
-    queryKey: ["admin-logs-instancias"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("whatsapp_instances")
-        .select("instance_name, owner_number");
-      if (error) throw error;
-      return (data ?? []) as Array<{
-        instance_name: string;
-        owner_number: string | null;
-      }>;
-    },
-    staleTime: 60_000,
-  });
+  const rows = (data?.rows ?? []) as LogRow[];
 
   const ownerNumberByInstance = useMemo(() => {
     const m = new Map<string, string | null>();
-    for (const i of instancias) m.set(i.instance_name, i.owner_number);
+    for (const r of rows) {
+      if (r.instancia) m.set(r.instancia, (r as LogRow & { owner_number?: string | null }).owner_number ?? null);
+    }
     return m;
-  }, [instancias]);
+  }, [rows]);
 
   const grupos = useMemo(
     () => agrupar(rows, ownerNumberByInstance),
