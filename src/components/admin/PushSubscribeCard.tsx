@@ -26,6 +26,7 @@ export function PushSubscribeCard() {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [subscribed, setSubscribed] = useState<boolean>(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
+  const [serverReady, setServerReady] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,9 @@ export function PushSubscribeCard() {
       .then((reg) => reg?.pushManager.getSubscription())
       .then((sub) => setSubscribed(!!sub))
       .catch(() => {});
+    getVapidPublicKey()
+      .then(({ key }) => setServerReady(Boolean(key)))
+      .catch(() => setServerReady(false));
   }, []);
 
   const handleSubscribe = async () => {
@@ -60,6 +64,7 @@ export function PushSubscribeCard() {
         return;
       }
       const { key } = await getVapidPublicKey();
+      setServerReady(Boolean(key));
       if (!key) {
         toast.error("Servidor não tem VAPID configurado");
         return;
@@ -139,7 +144,9 @@ export function PushSubscribeCard() {
     );
   }
 
-  const status = subscribed
+  const status = serverReady === false
+    ? { label: "Servidor sem VAPID", icon: XCircle, className: "bg-destructive/10 text-destructive" }
+    : subscribed
     ? { label: "Ativadas neste dispositivo", icon: CheckCircle2, className: "bg-accent/10 text-accent" }
     : permission === "denied"
       ? { label: "Bloqueadas no navegador", icon: XCircle, className: "bg-destructive/10 text-destructive" }
@@ -168,13 +175,13 @@ export function PushSubscribeCard() {
             Desativar neste dispositivo
           </Button>
         ) : (
-          <Button onClick={handleSubscribe} disabled={busy}>
+          <Button onClick={handleSubscribe} disabled={busy || serverReady === false}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bell className="mr-2 h-4 w-4" />}
             Ativar notificações
           </Button>
         )}
         {subscribed && (
-          <Button variant="ghost" onClick={handleTest} disabled={busy}>
+          <Button variant="ghost" onClick={handleTest} disabled={busy || serverReady === false}>
             Enviar push de teste
           </Button>
         )}

@@ -57,8 +57,8 @@ self.addEventListener("push", (event) => {
   }
   const options = {
     body: data.body,
-    icon: "/favicon.ico",
-    badge: "/favicon.ico",
+    icon: "/pwa-icon-192.png",
+    badge: "/pwa-icon-192.png",
     data: { url: data.url || "/" },
   };
   event.waitUntil(self.registration.showNotification(data.title, options));

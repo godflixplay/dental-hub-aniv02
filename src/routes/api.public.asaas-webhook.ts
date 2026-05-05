@@ -77,21 +77,36 @@ export const Route = createFileRoute("/api/public/asaas-webhook")({
           let assinaturaId: string | null = null;
           let userId: string | null = p.externalReference ?? null;
 
+          let assinaturaStatusAnterior: string | null = null;
+
           if (p.subscription) {
             const { data: assin } = await supabase
               .from("assinaturas")
-              .select("id, user_id")
+              .select("id, user_id, status")
               .eq("asaas_subscription_id", p.subscription)
               .maybeSingle();
             if (assin) {
               assinaturaId = assin.id;
               userId = userId ?? assin.user_id;
+              assinaturaStatusAnterior = (assin.status as string | null) ?? null;
             }
           }
 
           if (!userId) {
             console.warn("[asaas-webhook] sem user_id, ignorando", p.id);
             return new Response("ok (no user)", { status: 200 });
+          }
+
+          if (!assinaturaId && userId) {
+            const { data: assin } = await supabase
+              .from("assinaturas")
+              .select("id, status")
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            assinaturaId = (assin?.id as string | null) ?? null;
+            assinaturaStatusAnterior = (assin?.status as string | null) ?? null;
           }
 
           // Upsert do pagamento
@@ -119,8 +134,8 @@ export const Route = createFileRoute("/api/public/asaas-webhook")({
               .eq("id", assinaturaId);
           }
 
-          // Push para admins quando pagamento ativa a assinatura
-          if (novoStatus === "ativa") {
+          // Push para admins: novo assinante + pagamentos de assinatura
+          if (["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "PAYMENT_OVERDUE"].includes(event)) {
             try {
               const { sendPushToAdmins } = await import("@/utils/push.server");
               let email = "";
@@ -132,11 +147,20 @@ export const Route = createFileRoute("/api/public/asaas-webhook")({
                   .maybeSingle();
                 email = (prof?.email as string) ?? "";
               }
+              const valor = Number(p.value ?? 0).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+              const isNovoAssinante = novoStatus === "ativa" && assinaturaStatusAnterior !== "ativa";
               await sendPushToAdmins({
-                title: "Nova assinatura ativa",
-                body: `${email || userId} · R$ ${Number(p.value ?? 0).toFixed(2)}`,
+                title: isNovoAssinante
+                  ? "Novo assinante"
+                  : event === "PAYMENT_OVERDUE"
+                    ? "Pagamento de assinatura atrasado"
+                    : "Pagamento de assinatura confirmado",
+                body: `${email || userId} · ${valor}`,
                 url: "/admin/financeiro",
-                tipo: "sucesso",
+                tipo: event === "PAYMENT_OVERDUE" ? "aviso" : "sucesso",
               });
             } catch (e) {
               console.warn("[push] asaas notify falhou", e);

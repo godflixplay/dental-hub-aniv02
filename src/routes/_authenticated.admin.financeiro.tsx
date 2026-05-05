@@ -39,6 +39,18 @@ interface PingResult {
   error?: string;
 }
 
+async function withUiTimeout<T>(promise: Promise<T>, timeoutMs = 12000): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("O teste demorou demais. Verifique a chave/API do Asaas e tente novamente.")), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 function AdminFinanceiro() {
   const { session } = useAuth();
   const accessToken = session?.access_token;
@@ -52,7 +64,9 @@ function AdminFinanceiro() {
     }
     setPinging(true);
     try {
-      const res = (await pingAsaas({ data: { accessToken } })) as PingResult;
+      const res = (await withUiTimeout(
+        pingAsaas({ data: { accessToken } }),
+      )) as PingResult;
       setPingResult(res);
       if (res.ok) {
         toast.success(`Conectado ao Asaas (${res.env})`);

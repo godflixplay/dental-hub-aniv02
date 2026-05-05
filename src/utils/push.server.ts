@@ -25,52 +25,43 @@ export interface PushPayload {
   tipo?: "info" | "sucesso" | "aviso" | "erro";
 }
 
-/**
- * Dispara push para todos os admins + grava em `notificacoes` (audiência admin)
- * para alimentar o sino in-app.
- */
-export async function sendPushToAdmins(payload: PushPayload) {
-  if (!configureWebPush()) return { ok: false, reason: "vapid-missing" };
+async function sendPushToUserIds(
+  userIds: string[],
+  payload: PushPayload,
+  audiencia: "cliente" | "admin" = "cliente",
+) {
   const admin = getSupabaseAdmin();
+  const ids = Array.from(new Set(userIds.filter(Boolean)));
+  if (ids.length === 0) return { ok: true, sent: 0, total: 0, inApp: 0 };
 
-  // 1) Identifica todos os user_id de admins
-  const { data: admins, error: adminsErr } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("role", "admin");
-  if (adminsErr) {
-    console.error("[push] erro buscando admins", adminsErr);
-    return { ok: false, error: adminsErr.message };
-  }
-  const adminIds = (admins ?? []).map((a) => a.id as string);
-  if (adminIds.length === 0) return { ok: true, sent: 0 };
-
-  // 2) Busca subscriptions
-  const { data: subs, error: subsErr } = await admin
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
-    .in("user_id", adminIds);
-  if (subsErr) {
-    console.error("[push] erro buscando subscriptions", subsErr);
-  }
-
-  // 3) Insere registros no sino in-app (1 por admin)
   await admin.from("notificacoes").insert(
-    adminIds.map((uid) => ({
+    ids.map((uid) => ({
       user_id: uid,
       titulo: payload.title,
       mensagem: payload.body,
       tipo: payload.tipo ?? "info",
-      audiencia: "admin",
+      audiencia,
       link: payload.url ?? null,
     })),
   );
 
-  // 4) Dispara push em paralelo + cleanup de endpoints inválidos
+  if (!configureWebPush()) {
+    return { ok: false, reason: "vapid-missing", sent: 0, total: 0, inApp: ids.length };
+  }
+
+  const { data: subs, error: subsErr } = await admin
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth")
+    .in("user_id", ids);
+  if (subsErr) {
+    console.error("[push] erro buscando subscriptions", subsErr);
+    return { ok: false, error: subsErr.message, sent: 0, total: 0, inApp: ids.length };
+  }
+
   const json = JSON.stringify({
     title: payload.title,
     body: payload.body,
-    url: payload.url ?? "/admin",
+    url: payload.url ?? "/dashboard/comunicados",
   });
 
   let sent = 0;
@@ -88,10 +79,7 @@ export async function sendPushToAdmins(payload: PushPayload) {
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) {
-          await admin
-            .from("push_subscriptions")
-            .delete()
-            .eq("id", s.id as string);
+          await admin.from("push_subscriptions").delete().eq("id", s.id as string);
         } else {
           console.warn("[push] falha em endpoint", status, err);
         }
@@ -99,5 +87,29 @@ export async function sendPushToAdmins(payload: PushPayload) {
     }),
   );
 
-  return { ok: true, sent, total: subs?.length ?? 0 };
+  return { ok: true, sent, total: subs?.length ?? 0, inApp: ids.length };
+}
+
+/**
+ * Dispara push para todos os admins + grava em `notificacoes` (audiência admin)
+ * para alimentar o sino in-app.
+ */
+export async function sendPushToAdmins(payload: PushPayload) {
+  const admin = getSupabaseAdmin();
+
+  // 1) Identifica todos os user_id de admins
+  const { data: admins, error: adminsErr } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+  if (adminsErr) {
+    console.error("[push] erro buscando admins", adminsErr);
+    return { ok: false, error: adminsErr.message, sent: 0, total: 0, inApp: 0 };
+  }
+  const adminIds = (admins ?? []).map((a) => a.id as string);
+  return sendPushToUserIds(adminIds, { ...payload, url: payload.url ?? "/admin/notificacoes" }, "admin");
+}
+
+export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
+  return sendPushToUserIds(userIds, payload, "cliente");
 }

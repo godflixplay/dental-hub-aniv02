@@ -28,6 +28,7 @@ const SUPPORT_WHATSAPP_LINK = "https://wa.me/5521981089100";
 const clientMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Tutorial", url: "/dashboard/tutorial", icon: BookOpen },
+  { title: "Comunicados", url: "/dashboard/comunicados", icon: Megaphone },
   { title: "Meus Contatos", url: "/dashboard/contatos", icon: Users },
   { title: "Aniversários", url: "/dashboard/aniversarios", icon: Cake },
   { title: "Campanhas", url: "/dashboard/campanhas", icon: Megaphone },

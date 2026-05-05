@@ -37,14 +37,17 @@ async function asaasRequest(
   init: RequestInit & { body?: string } = {},
 ) {
   const { apiKey, baseUrl } = getAsaasConfig();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
   const res = await fetch(`${baseUrl}${path}`, {
     ...init,
+    signal: controller.signal,
     headers: {
       "Content-Type": "application/json",
       access_token: apiKey,
       ...(init.headers ?? {}),
     },
-  });
+  }).finally(() => clearTimeout(timeout));
   const text = await res.text();
   let data: unknown = null;
   try {

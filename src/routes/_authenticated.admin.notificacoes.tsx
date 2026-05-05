@@ -1,15 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Megaphone, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { PushSubscribeCard } from "@/components/admin/PushSubscribeCard";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDateTimeBR } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
-import { listNotificacoes, marcarComoLida } from "@/utils/notificacoes.functions";
+import { enviarComunicado, listNotificacoes, marcarComoLida } from "@/utils/notificacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/notificacoes")({
   component: AdminNotificacoesPage,
@@ -36,6 +39,9 @@ function AdminNotificacoesPage() {
   const { session } = useAuth();
   const accessToken = session?.access_token ?? "";
   const queryClient = useQueryClient();
+  const [titulo, setTitulo] = useState("");
+  const [mensagem, setMensagem] = useState("");
+  const [sending, setSending] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["notificacoes", "admin-page"],
@@ -50,6 +56,21 @@ function AdminNotificacoesPage() {
     if (!accessToken || naoLidas === 0) return;
     await marcarComoLida({ data: { accessToken } });
     await queryClient.invalidateQueries({ queryKey: ["notificacoes"] });
+  };
+
+  const sendComunicado = async () => {
+    if (!accessToken || sending) return;
+    setSending(true);
+    try {
+      const result = await enviarComunicado({ data: { accessToken, titulo, mensagem } });
+      setTitulo("");
+      setMensagem("");
+      toast.success(`Comunicado enviado para ${result.usuarios ?? 0} usuário(s)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar comunicado");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -68,6 +89,23 @@ function AdminNotificacoesPage() {
       </div>
 
       <PushSubscribeCard />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Megaphone className="h-5 w-5 text-primary" />
+            Enviar comunicado aos usuários
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título do comunicado" maxLength={120} />
+          <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Mensagem" rows={4} maxLength={1000} />
+          <Button onClick={sendComunicado} disabled={sending || titulo.trim().length < 3 || mensagem.trim().length < 3} className="gap-2">
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar comunicado
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

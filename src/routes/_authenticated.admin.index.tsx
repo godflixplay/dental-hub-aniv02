@@ -41,7 +41,6 @@ import {
 } from "@/utils/admin.functions";
 import { formatDateTimeBR } from "@/lib/date-format";
 import { cn } from "@/lib/utils";
-import { PushSubscribeCard } from "@/components/admin/PushSubscribeCard";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
@@ -145,8 +144,6 @@ function AdminDashboard() {
           Visão geral da plataforma Dental Hub
         </p>
       </div>
-
-      <PushSubscribeCard />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (

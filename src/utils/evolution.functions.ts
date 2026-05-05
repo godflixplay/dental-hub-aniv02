@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/integrations/supabase/client";
+import { getSupabaseAdmin } from "@/integrations/supabase/admin.server";
 
 const EVOLUTION_STATUS_WEBHOOK_URL =
   "https://n8n.vendavocenegocios.com.br/webhook/evolution-status";
@@ -153,6 +154,54 @@ function getEvolutionConfig() {
   // Remove trailing slash and accidental "/manager" suffix
   const cleaned = url.replace(/\/$/, "").replace(/\/manager$/i, "");
   return { url: cleaned, key };
+}
+
+async function persistInstanceStatusAndNotify(
+  instanceName: string,
+  status: string,
+  ownerNumber: string | null,
+) {
+  const admin = getSupabaseAdmin();
+  const { data: prevRow } = await admin
+    .from("whatsapp_instances")
+    .select("status, user_id")
+    .eq("instance_name", instanceName)
+    .maybeSingle();
+  const prevStatus = (prevRow?.status as string | null) ?? null;
+  const updatePayload: Record<string, unknown> = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+  if (ownerNumber) updatePayload.owner_number = ownerNumber;
+
+  const { error } = await admin
+    .from("whatsapp_instances")
+    .update(updatePayload)
+    .eq("instance_name", instanceName);
+  if (error && error.code === "42703") {
+    delete updatePayload.owner_number;
+    await admin.from("whatsapp_instances").update(updatePayload).eq("instance_name", instanceName);
+  }
+
+  if (prevStatus === status || !prevRow?.user_id) return;
+  if ((prevStatus !== "connected" && status === "connected") || (prevStatus === "connected" && status !== "connected")) {
+    try {
+      const { sendPushToAdmins } = await import("./push.server");
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("email")
+        .eq("id", prevRow.user_id as string)
+        .maybeSingle();
+      await sendPushToAdmins({
+        title: status === "connected" ? "WhatsApp conectado" : "Instância desconectada",
+        body: `${(prof?.email as string) || "Usuário"} · ${instanceName}`,
+        url: "/admin/usuarios",
+        tipo: status === "connected" ? "sucesso" : "aviso",
+      });
+    } catch (e) {
+      console.warn("[push] instance transition notify falhou", e);
+    }
+  }
 }
 
 function slugify(value: string): string {
@@ -498,13 +547,18 @@ export const getInstanceStatus = createServerFn({ method: "POST" })
       }
       // Extrai o número conectado (ownerJid) — usado para impedir auto-envio
       let ownerNumber: string | null = null;
+      let novoStatus = "disconnected";
       if (typeof body === "object" && body !== null) {
         const b = body as {
-          instance?: { owner?: string; ownerJid?: string; wuid?: string };
+          instance?: { state?: string; owner?: string; ownerJid?: string; wuid?: string };
+          state?: string;
           owner?: string;
           ownerJid?: string;
           wuid?: string;
         };
+        const state = b.instance?.state ?? b.state;
+        if (state === "open") novoStatus = "connected";
+        else if (state === "connecting") novoStatus = "connecting";
         const owner =
           b.instance?.ownerJid ??
           b.instance?.owner ??
@@ -518,6 +572,7 @@ export const getInstanceStatus = createServerFn({ method: "POST" })
           ownerNumber = owner.split("@")[0].replace(/\D/g, "") || null;
         }
       }
+      await persistInstanceStatusAndNotify(data.instanceName, novoStatus, ownerNumber);
       return { success: true, data: body, ownerNumber };
     } catch (error) {
       return {

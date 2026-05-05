@@ -30,6 +30,7 @@ import { Route as AuthenticatedDashboardRecuperacaoRouteImport } from './routes/
 import { Route as AuthenticatedDashboardLimparGithubRouteImport } from './routes/_authenticated.dashboard.limpar-github'
 import { Route as AuthenticatedDashboardLembretesRouteImport } from './routes/_authenticated.dashboard.lembretes'
 import { Route as AuthenticatedDashboardContatosRouteImport } from './routes/_authenticated.dashboard.contatos'
+import { Route as AuthenticatedDashboardComunicadosRouteImport } from './routes/_authenticated.dashboard.comunicados'
 import { Route as AuthenticatedDashboardCampanhasRouteImport } from './routes/_authenticated.dashboard.campanhas'
 import { Route as AuthenticatedDashboardAssinaturaRouteImport } from './routes/_authenticated.dashboard.assinatura'
 import { Route as AuthenticatedDashboardAniversariosRouteImport } from './routes/_authenticated.dashboard.aniversarios'
@@ -151,6 +152,12 @@ const AuthenticatedDashboardContatosRoute =
     path: '/contatos',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardComunicadosRoute =
+  AuthenticatedDashboardComunicadosRouteImport.update({
+    id: '/comunicados',
+    path: '/comunicados',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardCampanhasRoute =
   AuthenticatedDashboardCampanhasRouteImport.update({
     id: '/campanhas',
@@ -233,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
   '/dashboard/assinatura': typeof AuthenticatedDashboardAssinaturaRouteWithChildren
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
+  '/dashboard/comunicados': typeof AuthenticatedDashboardComunicadosRoute
   '/dashboard/contatos': typeof AuthenticatedDashboardContatosRoute
   '/dashboard/lembretes': typeof AuthenticatedDashboardLembretesRoute
   '/dashboard/limpar-github': typeof AuthenticatedDashboardLimparGithubRoute
@@ -263,6 +271,7 @@ export interface FileRoutesByTo {
   '/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
   '/dashboard/assinatura': typeof AuthenticatedDashboardAssinaturaRouteWithChildren
   '/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
+  '/dashboard/comunicados': typeof AuthenticatedDashboardComunicadosRoute
   '/dashboard/contatos': typeof AuthenticatedDashboardContatosRoute
   '/dashboard/lembretes': typeof AuthenticatedDashboardLembretesRoute
   '/dashboard/limpar-github': typeof AuthenticatedDashboardLimparGithubRoute
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/aniversarios': typeof AuthenticatedDashboardAniversariosRoute
   '/_authenticated/dashboard/assinatura': typeof AuthenticatedDashboardAssinaturaRouteWithChildren
   '/_authenticated/dashboard/campanhas': typeof AuthenticatedDashboardCampanhasRoute
+  '/_authenticated/dashboard/comunicados': typeof AuthenticatedDashboardComunicadosRoute
   '/_authenticated/dashboard/contatos': typeof AuthenticatedDashboardContatosRoute
   '/_authenticated/dashboard/lembretes': typeof AuthenticatedDashboardLembretesRoute
   '/_authenticated/dashboard/limpar-github': typeof AuthenticatedDashboardLimparGithubRoute
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/dashboard/aniversarios'
     | '/dashboard/assinatura'
     | '/dashboard/campanhas'
+    | '/dashboard/comunicados'
     | '/dashboard/contatos'
     | '/dashboard/lembretes'
     | '/dashboard/limpar-github'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/dashboard/aniversarios'
     | '/dashboard/assinatura'
     | '/dashboard/campanhas'
+    | '/dashboard/comunicados'
     | '/dashboard/contatos'
     | '/dashboard/lembretes'
     | '/dashboard/limpar-github'
@@ -394,6 +406,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/aniversarios'
     | '/_authenticated/dashboard/assinatura'
     | '/_authenticated/dashboard/campanhas'
+    | '/_authenticated/dashboard/comunicados'
     | '/_authenticated/dashboard/contatos'
     | '/_authenticated/dashboard/lembretes'
     | '/_authenticated/dashboard/limpar-github'
@@ -569,6 +582,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardContatosRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/comunicados': {
+      id: '/_authenticated/dashboard/comunicados'
+      path: '/comunicados'
+      fullPath: '/dashboard/comunicados'
+      preLoaderRoute: typeof AuthenticatedDashboardComunicadosRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/campanhas': {
       id: '/_authenticated/dashboard/campanhas'
       path: '/campanhas'
@@ -683,6 +703,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAniversariosRoute: typeof AuthenticatedDashboardAniversariosRoute
   AuthenticatedDashboardAssinaturaRoute: typeof AuthenticatedDashboardAssinaturaRouteWithChildren
   AuthenticatedDashboardCampanhasRoute: typeof AuthenticatedDashboardCampanhasRoute
+  AuthenticatedDashboardComunicadosRoute: typeof AuthenticatedDashboardComunicadosRoute
   AuthenticatedDashboardContatosRoute: typeof AuthenticatedDashboardContatosRoute
   AuthenticatedDashboardLembretesRoute: typeof AuthenticatedDashboardLembretesRoute
   AuthenticatedDashboardLimparGithubRoute: typeof AuthenticatedDashboardLimparGithubRoute
@@ -699,6 +720,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAssinaturaRoute:
       AuthenticatedDashboardAssinaturaRouteWithChildren,
     AuthenticatedDashboardCampanhasRoute: AuthenticatedDashboardCampanhasRoute,
+    AuthenticatedDashboardComunicadosRoute:
+      AuthenticatedDashboardComunicadosRoute,
     AuthenticatedDashboardContatosRoute: AuthenticatedDashboardContatosRoute,
     AuthenticatedDashboardLembretesRoute: AuthenticatedDashboardLembretesRoute,
     AuthenticatedDashboardLimparGithubRoute:
@@ -745,12 +768,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
