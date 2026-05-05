@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/integrations/supabase/client";
 import { getSupabaseAdmin } from "@/integrations/supabase/admin.server";
+import { sendPushToUsers } from "./push.server";
 
 // ============================================================
 // Server functions para o sino de notificações in-app.
@@ -102,4 +103,39 @@ export const criarNotificacao = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const enviarComunicado = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      accessToken: z.string().min(1),
+      titulo: z.string().min(3).max(120),
+      mensagem: z.string().min(3).max(1000),
+      link: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { supabase, user } = await getAuthedClient(data.accessToken);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (profile?.role !== "admin") throw new Error("Acesso negado");
+
+    const admin = getSupabaseAdmin();
+    const { data: users, error } = await admin
+      .from("profiles")
+      .select("id")
+      .neq("role", "admin");
+    if (error) throw new Error(error.message);
+
+    const userIds = (users ?? []).map((u) => u.id as string);
+    const result = await sendPushToUsers(userIds, {
+      title: data.titulo,
+      body: data.mensagem,
+      url: data.link || "/dashboard/comunicados",
+      tipo: "info",
+    });
+    return { ok: true, usuarios: userIds.length, ...result };
   });
